@@ -1,0 +1,3 @@
+/* entrypoints/plyr-content.css */
+/* 直接引入 Plyr 官方样式 */
+@import "plyr/dist/plyr.css";
