@@ -31,6 +31,9 @@ jobs:
         with:
           node-version: 24  # 可替换为你的 Node.js 版本
 
+      - name: 列出根目录文件（调试）
+        run: ls -la
+        
       - name: 安装依赖
         run: pnpm install
 
