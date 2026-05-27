@@ -3,6 +3,7 @@ import Hls from "hls.js";
 import Plyr from "plyr";
 import "./plyr.css";
 import { ContentScriptContext } from "wxt/utils/content-script-context";
+import { waitForElement } from './utils';
 
 type PlayHistory = {
   date: number;
@@ -28,13 +29,16 @@ const replacePlayer = (ctx: ContentScriptContext) => {
   const ui = createIntegratedUi(ctx, {
     position: "inline",
     anchor: "#player-wrap > .video-js > video",
-    onMount: (container) => {
+    onMount: async (container) => {
       container.style.display = "none";
       const vj = container.parentElement as HTMLVideoElement;
       if (!vj) return;
 
       const wrapper = vj.parentElement?.parentElement;
       if (!wrapper) return;
+
+      const el = await waitForElement("#lineContent .line-res .active[name='lineData']");
+      if (!el) return;
 
       const source = getVideoM3U8();
       if (!source) return;
