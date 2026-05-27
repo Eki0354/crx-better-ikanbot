@@ -41,7 +41,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: 安装依赖
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       # 5. 执行构建，产出 .output 目录
       - name: 执行构建
