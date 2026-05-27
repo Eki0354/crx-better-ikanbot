@@ -6,6 +6,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 # 2. 授予工作流写入仓库内容的权限，以便创建 Release 和上传附件
 permissions:
