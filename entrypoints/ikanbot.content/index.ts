@@ -1,9 +1,7 @@
-// content script 中
-import Hls from "hls.js";
-import Plyr from "plyr";
 import "./plyr.css";
 import { ContentScriptContext } from "wxt/utils/content-script-context";
 import { waitForElement } from "./utils";
+import { initPlayer, playVideo } from './player';
 
 type PlayHistory = {
   date: number;
@@ -13,20 +11,9 @@ type PlayHistory = {
   videoId: string;
 };
 
-type PlaybackProgress = {
-  url: string;
-  time: number;
-};
-
 const getVideoId = () =>
   document.getElementById("current_id")?.getAttribute("value") ||
   window.location.pathname.replace(/\/+$/g, "").split("/").pop();
-
-let hls = new Hls();
-let player: Plyr | null = null;
-let currentSource: string | null = null;
-
-const KEY_PLAYBACK_PROGRESS = "playback_progress";
 
 const getVideoM3U8 = () =>
   document
@@ -35,37 +22,6 @@ const getVideoM3U8 = () =>
 
 const getVideoTitle = () =>
   document.getElementById("video_title")?.innerText || "";
-
-const getVideoProgress = (): PlaybackProgress | null => {
-  if (!currentSource || !player) return null;
-
-  const list = JSON.parse(
-    localStorage.getItem(KEY_PLAYBACK_PROGRESS) || "[]",
-  ) as PlaybackProgress[];
-  return list.find((item) => item.url === currentSource) || null;
-};
-
-const saveVideoProgress = () => {
-  if (!currentSource || !player) return;
-
-  const list = JSON.parse(
-    localStorage.getItem(KEY_PLAYBACK_PROGRESS) || "[]",
-  ) as PlaybackProgress[];
-  const existingIndex = list.findIndex((item) => item.url === currentSource);
-
-  const newProgress: PlaybackProgress = {
-    url: currentSource,
-    time: player.currentTime,
-  };
-
-  if (existingIndex >= 0) {
-    list[existingIndex] = newProgress;
-  } else {
-    list.push(newProgress);
-  }
-
-  localStorage.setItem(KEY_PLAYBACK_PROGRESS, JSON.stringify(list));
-};
 
 const replacePlayer = (ctx: ContentScriptContext) => {
   const ui = createIntegratedUi(ctx, {
@@ -95,45 +51,7 @@ const replacePlayer = (ctx: ContentScriptContext) => {
         ":scope video",
       ) as HTMLVideoElement)!.style = "aspect-ratio: 16/9;";
 
-      if (Hls.isSupported()) {
-        // 初始化 Hls.js 并关联视频
-        hls.loadSource(source);
-        hls.attachMedia(video);
-        currentSource = source;
-
-        // 等待解析完成后，再初始化 Plyr，确保它接管视频控制
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
-          player = new Plyr(video, {
-            keyboard: {
-              global: true,
-            },
-            controls: [
-              "play-large",
-              "play",
-              "progress",
-              "current-time",
-              "duration",
-              "mute",
-              "volume",
-              "fullscreen",
-            ],
-          });
-
-          let hasInited = false;
-
-          player.on("canplay", () => {
-            if (hasInited) return;
-            hasInited = true;
-
-            const progress = getVideoProgress();
-            if (!progress) return;
-
-            player!.currentTime = progress.time;
-          });
-
-          player.on("timeupdate", saveVideoProgress);
-        });
-      }
+      initPlayer(video, source);
     },
   });
 
@@ -175,10 +93,8 @@ const fixBtns = (ctx: ContentScriptContext) => {
 
           const source = getVideoM3U8();
           if (!source) return;
-
-          hls.loadSource(source);
-          currentSource = source;
-          player?.play();
+          
+          playVideo(source);
         },
         true,
       );
