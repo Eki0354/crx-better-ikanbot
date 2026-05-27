@@ -1,0 +1,63 @@
+# .github/workflows/release.yml
+name: 自动创建 Release
+
+# 1. 设置触发条件：当推送以 'v' 开头的标签时触发工作流
+on:
+  push:
+    tags:
+      - 'v*'
+
+# 2. 授予工作流写入仓库内容的权限，以便创建 Release 和上传附件
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      # 3. 检出代码
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 4. 设置 Node.js 环境并缓存 pnpm 依赖，以加速构建
+      - uses: pnpm/action-setup@v4
+        name: 安装 pnpm
+        with:
+          version: 9  # 可替换为你的 pnpm 版本
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22  # 可替换为你的 Node.js 版本
+          cache: 'pnpm'
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      # 5. 执行构建，产出 .output 目录
+      - name: 执行构建
+        run: pnpm run build   # 确保你的 package.json 中存在 build 脚本
+
+      # 6. 将构建产物 .output 压缩为 zip 文件，并用标签命名
+      - name: 压缩 .output 文件夹
+        run: |
+          # 提取标签名，例如 v1.0.0
+          TAG_NAME=${GITHUB_REF_NAME#v}
+          zip -r "crx-better-ikanbot-${TAG_NAME}.zip" .output/chrome-mv3
+
+      # 7. 使用 softprops/action-gh-release 创建 Release 并上传附件
+      - name: 创建 Release 并上传附件
+        uses: softprops/action-gh-release@v2
+        with:
+          # 需要上传的 zip 文件路径
+          files: crx-better-ikanbot-*.zip
+          # 可选：设为 true 则创建草稿，你确认无误后手动发布
+          draft: false
+          # 可选：设为 true 则标记为预发布版
+          prerelease: false
+          # 可选：自定义 Release 标题，默认为标签名
+          # name: "Release ${GITHUB_REF_NAME}"
+          # 可选：自定义 Release 描述
+          # body: "这里填写你的发布说明。"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
