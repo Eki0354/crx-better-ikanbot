@@ -1,7 +1,7 @@
 import "./plyr.css";
 import { ContentScriptContext } from "wxt/utils/content-script-context";
 import { waitForElement } from "./utils";
-import { initPlayer, playVideo } from './player';
+import { initPlayer, playVideo } from "./player";
 
 type PlayHistory = {
   date: number;
@@ -42,6 +42,8 @@ const replacePlayer = (ctx: ContentScriptContext) => {
 
       const source = getVideoM3U8();
       if (!source) return;
+
+      window.postMessage({ type: "DISPOSE_SOURCE_VIDEO" }, "/");
 
       const video = document.createElement("video");
       wrapper.innerHTML = "";
@@ -89,11 +91,11 @@ const fixBtns = (ctx: ContentScriptContext) => {
             videoId: getVideoId() || "",
           };
 
-          window.postMessage({ type: "SAVE_PLAY_HISTORY", data: hisData }, "*");
+          window.postMessage({ type: "SAVE_PLAY_HISTORY", data: hisData }, "/");
 
           const source = getVideoM3U8();
           if (!source) return;
-          
+
           playVideo(source);
         },
         true,
