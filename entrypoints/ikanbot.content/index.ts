@@ -107,7 +107,7 @@ const fixBtns = (ctx: ContentScriptContext) => {
 export default defineContentScript({
   matches: ["*://www.ikanbot.com/play/*"],
   async main(ctx) {
-    await injectScript("/inject-main-world.js");
+    await injectScript("/inject-ikanbot-main-world.js");
 
     replacePlayer(ctx);
     fixBtns(ctx);
