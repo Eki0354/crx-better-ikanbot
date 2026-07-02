@@ -2,7 +2,7 @@
   "name": "Better Ikanbot",
   "description": "为 ikanbot.com 量身打造的浏览器扩展，带来极致观影体验",
   "private": true,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "scripts": {
     "dev": "wxt",
