@@ -2,6 +2,8 @@ import Hls from "hls.js";
 import Plyr from "plyr";
 import nextIcon from "~/assets/next.png";
 import immersiveIcon from "~/assets/immersive.png";
+import { debounce } from "lodash-es";
+import { sendMessage, onMessage } from "webext-bridge/content-script";
 
 type PlaybackProgress = {
   url: string;
@@ -23,27 +25,33 @@ const getVideoProgress = (): PlaybackProgress | null => {
   return list.find((item) => item.url === currentSource) || null;
 };
 
-const saveVideoProgress = () => {
-  if (!currentSource || !player) return;
+const saveVideoProgress = debounce(
+  () => {
+    if (!currentSource || !player) return;
 
-  const list = JSON.parse(
-    localStorage.getItem(KEY_PLAYBACK_PROGRESS) || "[]",
-  ) as PlaybackProgress[];
-  const existingIndex = list.findIndex((item) => item.url === currentSource);
+    const list = JSON.parse(
+      localStorage.getItem(KEY_PLAYBACK_PROGRESS) || "[]",
+    ) as PlaybackProgress[];
+    const existingIndex = list.findIndex((item) => item.url === currentSource);
 
-  const newProgress: PlaybackProgress = {
-    url: currentSource,
-    time: player.currentTime,
-  };
+    const newProgress: PlaybackProgress = {
+      url: currentSource,
+      time: player.currentTime,
+    };
 
-  if (existingIndex >= 0) {
-    list[existingIndex] = newProgress;
-  } else {
-    list.push(newProgress);
-  }
+    if (existingIndex >= 0) {
+      list[existingIndex] = newProgress;
+    } else {
+      list.push(newProgress);
+    }
 
-  localStorage.setItem(KEY_PLAYBACK_PROGRESS, JSON.stringify(list));
-};
+    const str = JSON.stringify(list);
+    localStorage.setItem(KEY_PLAYBACK_PROGRESS, str);
+    sendMessage("playback_progress", str, "background");
+  },
+  1000,
+  { trailing: true, maxWait: 1000 },
+);
 
 const createNextBtn = () => {
   const controlsContainer = document.querySelector(".plyr__controls");
@@ -118,11 +126,11 @@ const createImmersiveBtn = () => {
       if (!immActive) {
         plyrEl.classList.add("immersive-mode");
         plyrEl.style.position = "fixed";
-        plyrEl.style.top = '0';
-        plyrEl.style.left = '0';
+        plyrEl.style.top = "0";
+        plyrEl.style.left = "0";
         plyrEl.style.width = "100vw";
         plyrEl.style.height = "100vh";
-        plyrEl.style.zIndex = '9999';
+        plyrEl.style.zIndex = "9999";
         document.body.classList.add("no-scroll");
         immActive = true;
       } else {
@@ -144,7 +152,10 @@ const createImmersiveBtn = () => {
     const escHandler = (e: KeyboardEvent) => {
       if (e.key === "Escape" && immActive) toggleImmersiveFallback();
     };
-    window.removeEventListener("keydown", (window as any).__immersiveEscHandler);
+    window.removeEventListener(
+      "keydown",
+      (window as any).__immersiveEscHandler,
+    );
     (window as any).__immersiveEscHandler = escHandler;
     window.addEventListener("keydown", escHandler);
   }
@@ -202,3 +213,16 @@ function initPlayer(video: HTMLVideoElement, source: string) {
 }
 
 export { player, initPlayer, playVideo };
+
+// 监听远程同步：从 Dropbox 拉取的数据写回本地
+onMessage("sync_progress", ({ data }) => {
+  const payload = data as string;
+  if (payload) {
+    localStorage.setItem(KEY_PLAYBACK_PROGRESS, payload);
+  }
+});
+
+// 监听获取当前进度请求：popup 手动上传时调用
+onMessage("get_progress", () => {
+  return localStorage.getItem(KEY_PLAYBACK_PROGRESS) || "";
+});

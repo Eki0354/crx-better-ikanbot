@@ -1,30 +1,20 @@
 <script lang="ts" setup>
-import HelloWorld from '@/components/HelloWorld.vue';
+import { onMessage } from "webext-bridge/popup";
+import { useDropboxStore } from "./stores/dropbox";
+import { storeToRefs } from "pinia";
+import OAuthBox from "@/components/OAuthBox.vue";
+import ProgressSync from "@/components/ProgressSync.vue";
+
+const dbStore = useDropboxStore();
+const { token } = storeToRefs(dbStore);
+
+// 监听 background 发出的 token 过期通知 → 清除 token
+onMessage("token_expired", () => {
+  dbStore.clearToken();
+});
 </script>
 
 <template>
-  <div>
-    <a href="https://wxt.dev" target="_blank">
-      <img src="/wxt.svg" class="logo" alt="WXT logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="@/assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="WXT + Vue" />
+  <OAuthBox v-if="!token" />
+  <ProgressSync v-else />
 </template>
-
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #54bc4ae0);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>

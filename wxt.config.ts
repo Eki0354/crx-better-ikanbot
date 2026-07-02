@@ -1,3 +1,4 @@
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "wxt";
 
 // See https://wxt.dev/api/config.html
@@ -7,6 +8,7 @@ export default defineConfig({
     disabled: true,
   },
   manifest: {
+    host_permissions: ["https://api.dropboxapi.com/*"],
     web_accessible_resources: [
       {
         resources: ["inject-ikanbot-main-world.js"],
@@ -14,4 +16,7 @@ export default defineConfig({
       },
     ],
   },
+  vite: () => ({
+    plugins: [tailwindcss()],
+  }),
 });
