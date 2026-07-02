@@ -4,6 +4,7 @@ import nextIcon from "~/assets/next.png";
 import immersiveIcon from "~/assets/immersive.png";
 import { debounce } from "lodash-es";
 import { sendMessage, onMessage } from "webext-bridge/content-script";
+import { createDownloadBtn } from "./download";
 
 type PlaybackProgress = {
   url: string;
@@ -188,8 +189,13 @@ function initPlayer(video: HTMLVideoElement, source: string) {
           "duration",
           "mute",
           "volume",
+          'settings',
           "fullscreen",
         ],
+        i18n: {
+          speed: '速度',
+          normal: '1.0x',
+        }
       });
 
       let hasInited = false;
@@ -205,6 +211,7 @@ function initPlayer(video: HTMLVideoElement, source: string) {
       });
 
       player.on("ready", createNextBtn);
+      player.on("ready", createDownloadBtn);
       player.on("ready", createImmersiveBtn);
 
       player.on("timeupdate", saveVideoProgress);
@@ -212,7 +219,7 @@ function initPlayer(video: HTMLVideoElement, source: string) {
   }
 }
 
-export { player, initPlayer, playVideo };
+export { player, initPlayer, playVideo, hls, currentSource };
 
 // 监听远程同步：从 Dropbox 拉取的数据写回本地
 onMessage("sync_progress", ({ data }) => {
