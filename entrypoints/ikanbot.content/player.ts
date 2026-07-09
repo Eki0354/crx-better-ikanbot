@@ -168,55 +168,85 @@ function playVideo(source: string) {
   player?.play();
 }
 
-function initPlayer(video: HTMLVideoElement, source: string) {
-  if (Hls.isSupported()) {
-    // 初始化 Hls.js 并关联视频
-    hls.loadSource(source);
-    hls.attachMedia(video);
-    currentSource = source;
+function initPlayer(video: HTMLVideoElement, source: string, isInitial = true) {
+  player = new Plyr(video, {
+    keyboard: {
+      global: true,
+    },
+    controls: [
+      "play-large",
+      "play",
+      "progress",
+      "current-time",
+      "duration",
+      "mute",
+      "volume",
+      "settings",
+      "fullscreen",
+    ],
+    i18n: {
+      speed: "速度",
+      normal: "1.0x",
+    },
+  });
 
-    // 等待解析完成后，再初始化 Plyr，确保它接管视频控制
-    hls.on(Hls.Events.MANIFEST_PARSED, function () {
-      player = new Plyr(video, {
-        keyboard: {
-          global: true,
-        },
-        controls: [
-          "play-large",
-          "play",
-          "progress",
-          "current-time",
-          "duration",
-          "mute",
-          "volume",
-          'settings',
-          "fullscreen",
-        ],
-        i18n: {
-          speed: '速度',
-          normal: '1.0x',
-        }
-      });
+  let hasInited = false;
 
-      let hasInited = false;
+  player.on("canplay", () => {
+    if (hasInited) return;
+    hasInited = true;
 
-      player.on("canplay", () => {
-        if (hasInited) return;
-        hasInited = true;
+    const progress = getVideoProgress();
+    if (progress) {
+      player!.currentTime = progress.time;
+    }
 
-        const progress = getVideoProgress();
-        if (!progress) return;
+    if (!isInitial) {
+      player!.play();
+    }
+  });
 
-        player!.currentTime = progress.time;
-      });
+  player.on("ready", createNextBtn);
+  player.on("ready", createDownloadBtn);
+  player.on("ready", createImmersiveBtn);
 
-      player.on("ready", createNextBtn);
-      player.on("ready", createDownloadBtn);
-      player.on("ready", createImmersiveBtn);
+  player.on("timeupdate", saveVideoProgress);
 
-      player.on("timeupdate", saveVideoProgress);
+  if (!Hls.isSupported()) return;
+
+  // 初始化 Hls.js 并关联视频
+  hls.loadSource(source);
+  hls.attachMedia(video);
+  currentSource = source;
+
+  // 等待解析完成后，再初始化 Plyr，确保它接管视频控制
+  hls.on(Hls.Events.MANIFEST_PARSED, function () {
+    // 清除错误信息
+    document.getElementById("bi-error-text")?.remove();
+  });
+
+  hls.on(Hls.Events.ERROR, () => {
+    const pn = video.parentElement!;
+
+    if (pn.style.position === "") {
+      pn.style.position = "relative";
+    }
+
+    const em = document.createElement("div");
+    em.id = "bi-error-text";
+    em.textContent = "资源无法加载，请尝试换源";
+
+    Object.assign(em.style, {
+      fontSize: "18px",
+      position: "absolute",
+      left: "50%",
+      top: "40%",
+      transform: "translate3d(-50%, -50%, 0)",
+      color: '#ddd',
     });
-  }
+
+    pn.appendChild(em);
+  });
 }
 
 export { player, initPlayer, playVideo, hls, currentSource };
