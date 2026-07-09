@@ -12,7 +12,8 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "vue-tsc --noEmit",
-    "postinstall": "wxt prepare"
+    "postinstall": "wxt prepare",
+    "bump": "node ./scripts/bump.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.2",
