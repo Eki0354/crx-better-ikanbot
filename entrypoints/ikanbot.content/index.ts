@@ -1,6 +1,7 @@
 import "./plyr.css";
+import "./series.css";
 import { ContentScriptContext } from "wxt/utils/content-script-context";
-import { waitForElement } from "./utils";
+import { hideSeriesSidebar, showSeriesSidebar, waitForElement } from "./utils";
 import { initPlayer, playVideo } from "./player";
 
 type PlayHistory = {
@@ -66,7 +67,7 @@ const fixBtns = (ctx: ContentScriptContext) => {
     anchor: "#lineContent .line-res [name='lineData']",
     onMount: (container) => {
       container.style.display = "none";
-      const wrapper = document.getElementById('lineContent');
+      const wrapper = document.getElementById("lineContent");
       if (!wrapper) return;
 
       wrapper.addEventListener(
@@ -106,12 +107,128 @@ const fixBtns = (ctx: ContentScriptContext) => {
   ui.autoMount();
 };
 
+const SIDEBAR_WIDTH_KEY = "betterIkanbot_sidebarWidth";
+const SIDEBAR_MIN_WIDTH = 220;
+const SIDEBAR_MAX_WIDTH_RATIO = 0.5;
+
+const fixSeries = (ctx: ContentScriptContext) => {
+  const ui = createIntegratedUi(ctx, {
+    position: "inline",
+    anchor: ".row:has(#playList)",
+    onMount: (container) => {
+      container.className = "container-collapse";
+
+      const sidebar: HTMLElement | null = container.closest(
+        ".row:has(#playList)",
+      );
+      if (!sidebar) return;
+
+      // 加载保存的宽度
+      const savedWidth = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+      if (savedWidth) {
+        const w = parseInt(savedWidth, 10);
+        if (
+          w >= SIDEBAR_MIN_WIDTH &&
+          w <= window.innerWidth * SIDEBAR_MAX_WIDTH_RATIO
+        ) {
+          sidebar.style.width = w + "px";
+        }
+      }
+
+      // 折叠 / 展开按钮
+      const collapseBtn = document.createElement("button");
+      collapseBtn.className = "btn-collapse";
+      collapseBtn.innerHTML = "◀";
+      collapseBtn.title = "收起侧边栏";
+
+      const expandBtn = document.createElement("button");
+      expandBtn.className = "btn-expand";
+      expandBtn.innerHTML = "▶";
+      expandBtn.title = "展开侧边栏";
+
+      container.appendChild(collapseBtn);
+      document.body.appendChild(expandBtn);
+
+      collapseBtn.addEventListener("click", hideSeriesSidebar);
+      expandBtn.addEventListener("click", showSeriesSidebar);
+
+      // 拖拽改变宽度
+      const handle = document.createElement("div");
+      handle.className = "resize-handle";
+      sidebar.appendChild(handle);
+
+      let isDragging = false;
+
+      const onMouseDown = (e: MouseEvent) => {
+        e.preventDefault();
+        isDragging = true;
+        handle.classList.add("is-dragging");
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+      };
+
+      const onMouseMove = (e: MouseEvent) => {
+        if (!isDragging) return;
+        let newWidth = e.clientX;
+        newWidth = Math.max(newWidth, SIDEBAR_MIN_WIDTH);
+        newWidth = Math.min(
+          newWidth,
+          window.innerWidth * SIDEBAR_MAX_WIDTH_RATIO,
+        );
+        sidebar.style.width = newWidth + "px";
+      };
+
+      const onMouseUp = () => {
+        if (!isDragging) return;
+        // isDragging = false;
+        handle.classList.remove("is-dragging");
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+
+        // 保存宽度
+        const w = sidebar.offsetWidth;
+        localStorage.setItem(SIDEBAR_WIDTH_KEY, String(w));
+      };
+
+      handle.addEventListener("mousedown", onMouseDown);
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp, true);
+
+      // 点击侧边栏外部自动收起
+      const onOutsideClick = (e: MouseEvent) => {
+        // mouseup必须先于本事件触发，所以状态在这里进行改变
+        if (isDragging) {
+          isDragging = false;
+          return;
+        }
+
+        const node: HTMLDivElement | null = document.querySelector(
+          ".row:has(#playList)",
+        );
+        if (!node || !node.style.display || node.style.display === "none")
+          return;
+        if (node.contains(e.target as Node)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        node.style.display = "none";
+      };
+
+      window.addEventListener("click", onOutsideClick, true);
+    },
+  });
+
+  ui.autoMount();
+};
+
 export default defineContentScript({
   matches: ["*://www.ikanbot.com/play/*"],
   async main(ctx) {
     await injectScript("/inject-ikanbot-main-world.js");
 
     replacePlayer(ctx);
+    fixSeries(ctx);
     fixBtns(ctx);
   },
 });

@@ -1,0 +1,113 @@
+.row:has(#playList) {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 320px;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #fff;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 12px;
+  padding: 10px 12px;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.12);
+  z-index: 10001;
+  display: none;
+}
+
+.row:has(#playList) > div:first-child {
+  width: 100%;
+  float: none;
+  flex: 1;
+  overflow: auto;
+}
+
+#playList {
+  width: 100%;
+  float: none;
+}
+
+.row .container-collapse {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.row:has(#playList) .btn-collapse {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+  cursor: pointer;
+  border: none;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  line-height: 1;
+  color: #666;
+  transition: background 0.2s;
+}
+
+.row:has(#playList) .btn-collapse:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body > .btn-expand {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  cursor: pointer;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 0 4px 4px 0;
+  padding: 6px 8px;
+  font-size: 14px;
+  line-height: 1;
+  color: #666;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+  transition: background 0.2s;
+}
+
+body > .btn-expand:hover {
+  background: #fff;
+}
+
+.row:has(#playList) .resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 3;
+  background: transparent;
+  transition: background 0.2s;
+}
+
+.row:has(#playList) .resize-handle:hover,
+.row:has(#playList) .resize-handle.is-dragging {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.row:has(#playList) .resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 32px;
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.15);
+  transition: background 0.2s, height 0.2s;
+}
+
+.row:has(#playList) .resize-handle:hover::after,
+.row:has(#playList) .resize-handle.is-dragging::after {
+  background: rgba(0, 0, 0, 0.35);
+  height: 48px;
+}
