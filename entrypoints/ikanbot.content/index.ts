@@ -66,7 +66,7 @@ const fixBtns = (ctx: ContentScriptContext) => {
     anchor: "#lineContent .line-res [name='lineData']",
     onMount: (container) => {
       container.style.display = "none";
-      const wrapper = container.parentElement?.parentElement?.parentElement;
+      const wrapper = document.getElementById('lineContent');
       if (!wrapper) return;
 
       wrapper.addEventListener(
