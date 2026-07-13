@@ -121,6 +121,18 @@ const fixSeries = (ctx: ContentScriptContext) => {
       );
       if (!sidebar) return;
 
+      const titleNode = sidebar.querySelector(".result-info .meta.title");
+      if (titleNode) {
+        const dbLink = document.createElement("a");
+        dbLink.className = 'douban-search-link';
+        dbLink.target = "_blank";
+        dbLink.href = `https://search.douban.com/movie/subject_search?search_text=${encodeURIComponent(titleNode.textContent)}&cat=1002`;
+        dbLink.textContent = "豆瓣搜索";
+
+        titleNode.appendChild(dbLink);
+      }
+
+      // 按钮：标记无效源
       const verifyBtn = document.createElement("button");
       verifyBtn.className = "btn-verify";
       verifyBtn.textContent = "标记无效源";

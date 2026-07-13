@@ -111,7 +111,9 @@ body > .btn-expand:hover {
   height: 32px;
   border-radius: 1px;
   background: rgba(0, 0, 0, 0.15);
-  transition: background 0.2s, height 0.2s;
+  transition:
+    background 0.2s,
+    height 0.2s;
 }
 
 .row:has(#playList) .resize-handle:hover::after,
@@ -125,7 +127,7 @@ body > .btn-expand:hover {
 }
 
 #lineContent .line-res [name="lineData"].bad-source:before {
-  content: 'X';
+  content: "X";
   position: absolute;
   left: 50%;
   top: 50%;
@@ -133,4 +135,8 @@ body > .btn-expand:hover {
   color: red;
   font-weight: 600;
   font-size: 20px;
+}
+
+.douban-search-link {
+  margin-left: 8px;
 }
