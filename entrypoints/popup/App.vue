@@ -24,6 +24,8 @@ function goHome() {
 
 function doSearch() {
   const q = encodeURIComponent(keyword.value);
+  if (!q) return;
+
   browser.tabs.create({ url: `https://www.ikanbot.com/search?q=${q}` });
 }
 </script>
@@ -41,7 +43,13 @@ function doSearch() {
         placeholder="搜索..."
         @keyup.enter="doSearch"
       />
-      <button class="header-btn" @click="doSearch" title="搜索">
+      <button
+        class="header-btn"
+        :style="{ cursor: keyword ? 'auto' : 'not-allowed' }"
+        :disabled="!keyword"
+        @click="doSearch"
+        title="搜索"
+      >
         <img :src="searchPng" alt="搜索" class="header-icon" />
       </button>
     </header>
