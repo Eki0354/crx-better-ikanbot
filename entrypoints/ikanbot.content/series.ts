@@ -6,6 +6,8 @@ const SIDEBAR_WIDTH_KEY = "betterIkanbot_sidebarWidth";
 const SIDEBAR_MIN_WIDTH = 220;
 const SIDEBAR_MAX_WIDTH_RATIO = 0.5;
 
+const CN_BS = "bad-source";
+
 type PlayHistory = {
   date: number;
   lineId: string;
@@ -72,6 +74,41 @@ const fixBtns = (ctx: ContentScriptContext) => {
   ui.autoMount();
 };
 
+function setBadSource(btn: Element, isBad = true) {
+  if (isBad) {
+    if (!btn.classList.contains(CN_BS)) {
+      btn.classList.add(CN_BS);
+    }
+  } else {
+    btn.classList.remove(CN_BS);
+  }
+}
+
+async function onVerifySources() {
+  const btns = Array.from(
+    document.querySelectorAll("#lineContent .line-res [name='lineData']"),
+  );
+
+  const promises = btns.map(async (btn) => {
+    const source = btn.getAttribute("udata");
+    if (!source) return;
+
+    try {
+      const res = await fetch(source);
+
+      const isOk = res.ok && res.status === 200;
+      setBadSource(btn, !isOk);
+
+      return isOk;
+    } catch (error) {
+      setBadSource(btn, true);
+      return false;
+    }
+  });
+
+  return Promise.all(promises);
+}
+
 const fixSeries = (ctx: ContentScriptContext) => {
   const ui = createIntegratedUi(ctx, {
     position: "inline",
@@ -83,6 +120,14 @@ const fixSeries = (ctx: ContentScriptContext) => {
         ".row:has(#playList)",
       );
       if (!sidebar) return;
+
+      const verifyBtn = document.createElement("button");
+      verifyBtn.className = "btn-verify";
+      verifyBtn.textContent = "标记无效源";
+      verifyBtn.addEventListener("click", onVerifySources);
+
+      // 节点排列为column-reverse，所以插入到最后让其显示在顶部
+      sidebar.appendChild(verifyBtn);
 
       // 加载保存的宽度
       const savedWidth = localStorage.getItem(SIDEBAR_WIDTH_KEY);

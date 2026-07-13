@@ -54,6 +54,14 @@
   background: rgba(0, 0, 0, 0.1);
 }
 
+.row.row:has(#playList) .btn-verify {
+  background-color: #00a1d6;
+  border: none;
+  color: #fff;
+  padding: 8px 0;
+  margin: 0 32px;
+}
+
 body > .btn-expand {
   display: block;
   position: fixed;
@@ -110,4 +118,19 @@ body > .btn-expand:hover {
 .row:has(#playList) .resize-handle.is-dragging::after {
   background: rgba(0, 0, 0, 0.35);
   height: 48px;
+}
+
+#lineContent .line-res [name="lineData"].bad-source {
+  position: relative;
+}
+
+#lineContent .line-res [name="lineData"].bad-source:before {
+  content: 'X';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  color: red;
+  font-weight: 600;
+  font-size: 20px;
 }

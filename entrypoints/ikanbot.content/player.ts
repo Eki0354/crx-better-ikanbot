@@ -116,10 +116,7 @@ const createSeriesBtn = () => {
   const playBtn = controlsContainer.querySelector(
     '.plyr__control[data-plyr="play"]',
   );
-  if (
-    playBtn &&
-    !controlsContainer.querySelector(".plyr__control--series")
-  ) {
+  if (playBtn && !controlsContainer.querySelector(".plyr__control--series")) {
     // 创建剧集按钮
     const seriesBtn = document.createElement("button");
     seriesBtn.className =
@@ -251,11 +248,6 @@ function initPlayer(video: HTMLVideoElement, source: string, isInitial = true) {
 
   if (!Hls.isSupported()) return;
 
-  // 初始化 Hls.js 并关联视频
-  hls.loadSource(source);
-  hls.attachMedia(video);
-  currentSource = source;
-
   // 等待解析完成后，再初始化 Plyr，确保它接管视频控制
   hls.on(Hls.Events.MANIFEST_PARSED, function () {
     // 清除错误信息
@@ -279,11 +271,16 @@ function initPlayer(video: HTMLVideoElement, source: string, isInitial = true) {
       left: "50%",
       top: "40%",
       transform: "translate3d(-50%, -50%, 0)",
-      color: '#ddd',
+      color: "#ddd",
     });
 
     pn.appendChild(em);
   });
+
+  // 初始化 Hls.js 并关联视频
+  hls.loadSource(source);
+  hls.attachMedia(video);
+  currentSource = source;
 }
 
 const replacePlayer = (ctx: ContentScriptContext) => {
