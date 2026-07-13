@@ -3,7 +3,7 @@
     <p v-if="isOAuthing">正在授权...</p>
     <template v-else>
       <p>未授权Dropbox</p>
-      <button class="btn-oauth" @click="onOAuth">Drop授权</button>
+      <button class="btn-oauth" @click="onOAuth">Dropbox授权</button>
     </template>
   </div>
 </template>
