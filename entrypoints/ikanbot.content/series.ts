@@ -228,4 +228,4 @@ const fixSeries = (ctx: ContentScriptContext) => {
   ui.autoMount();
 };
 
-export { getVideoM3U8, fixBtns, fixSeries };
+export { getVideoId, getVideoTitle, getVideoM3U8, fixBtns, fixSeries };
