@@ -11,7 +11,7 @@ export default defineConfig({
     host_permissions: ["https://api.dropboxapi.com/*"],
     web_accessible_resources: [
       {
-        resources: ["inject-ikanbot-main-world.js"],
+        resources: ["inject-play.js", "inject-anti-ads.js"],
         matches: ["*://www.ikanbot.com/*"],
       },
     ],

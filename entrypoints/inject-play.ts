@@ -1,13 +1,6 @@
-// entrypoints/inject-main-world.ts
-declare var A_Store: any;
+// entrypoints/inject-play.ts
 
 export default defineUnlistedScript(() => {
-  try {
-    A_Store.isCooldown = () => true; // 屏蔽广告判断逻辑
-  } catch (e) {
-    console.warn("Failed to override A_Store.isCooldown:", e);
-  }
-
   window.addEventListener("message", (event) => {
     if (event.source !== window) return;
 
