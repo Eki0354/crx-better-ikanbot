@@ -5,7 +5,9 @@ import immersiveIcon from "~/assets/immersive.png";
 import { debounce } from "lodash-es";
 import { sendMessage, onMessage } from "webext-bridge/content-script";
 import { createDownloadBtn } from "./download";
-import { showSeriesSidebar } from "./utils";
+import { showSeriesSidebar, waitForElement } from "./utils";
+import { ContentScriptContext } from "#imports";
+import { getVideoM3U8 } from "./series";
 
 type PlaybackProgress = {
   url: string;
@@ -284,7 +286,44 @@ function initPlayer(video: HTMLVideoElement, source: string, isInitial = true) {
   });
 }
 
-export { player, initPlayer, playVideo, hls, currentSource };
+const replacePlayer = (ctx: ContentScriptContext) => {
+  const ui = createIntegratedUi(ctx, {
+    position: "inline",
+    anchor: "#player-wrap > .video-js > video",
+    onMount: async (container) => {
+      container.style.display = "none";
+      const vj = container.parentElement as HTMLVideoElement;
+      if (!vj) return;
+
+      const wrapper = vj.parentElement?.parentElement;
+      if (!wrapper) return;
+
+      const el = await waitForElement(
+        "#lineContent .line-res .active[name='lineData']",
+      );
+      if (!el) return;
+
+      const source = getVideoM3U8();
+      if (!source) return;
+
+      window.postMessage({ type: "DISPOSE_SOURCE_VIDEO" }, "/");
+
+      const video = document.createElement("video");
+      wrapper.innerHTML = "";
+      wrapper.appendChild(video);
+      wrapper.parentElement!.className = "";
+      (wrapper.parentElement!.querySelector(
+        ":scope video",
+      ) as HTMLVideoElement)!.style = "aspect-ratio: 16/9;";
+
+      initPlayer(video, source);
+    },
+  });
+
+  ui.autoMount();
+};
+
+export { player, initPlayer, replacePlayer, playVideo, hls, currentSource };
 
 // 监听远程同步：从 Dropbox 拉取的数据写回本地
 onMessage("sync_progress", ({ data }) => {
