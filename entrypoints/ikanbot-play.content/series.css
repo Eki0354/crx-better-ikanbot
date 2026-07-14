@@ -28,6 +28,15 @@
   float: none;
 }
 
+#playList .item-root {
+  padding: 8px 12px;
+}
+
+#playList .item-root .detail {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
 .row .container-collapse {
   position: absolute;
   right: 0;
