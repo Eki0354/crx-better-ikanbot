@@ -1,5 +1,4 @@
 import "./plyr.css";
-import "./series.css";
 import { replacePlayer } from "./player";
 import { fixBtns, fixSeries } from "./series";
 
