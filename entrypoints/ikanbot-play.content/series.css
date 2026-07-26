@@ -1,151 +1,79 @@
-.row:has(#playList) {
+/* 豆瓣截图弹窗 */
+.douban-screenshot-overlay {
   position: fixed;
-  left: 0;
-  top: 0;
-  width: 320px;
-  height: 100vh;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background: #fff;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  flex-direction: column-reverse;
-  gap: 12px;
-  padding: 10px 12px;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.12);
-  z-index: 10001;
-  display: none;
+  align-items: center;
+  justify-content: center;
 }
 
-.row:has(#playList) > div:first-child {
-  width: 100%;
-  float: none;
-  flex: 1;
-  overflow: auto;
+.douban-screenshot-popup {
+  position: relative;
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 
-#playList {
-  width: 100%;
-  float: none;
+.douban-screenshot-popup img {
+  display: block;
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
-#playList .item-root {
-  padding: 8px 12px;
-}
-
-#playList .item-root .detail {
-  max-height: 120px;
-  overflow-y: auto;
-}
-
-.row .container-collapse {
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-.row:has(#playList) .btn-collapse {
+.douban-screenshot-popup .btn-close {
   position: absolute;
   top: 4px;
   right: 4px;
-  z-index: 1;
-  cursor: pointer;
+  width: 28px;
+  height: 28px;
   border: none;
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 14px;
-  line-height: 1;
-  color: #666;
-  transition: background 0.2s;
-}
-
-.row:has(#playList) .btn-collapse:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.row.row:has(#playList) .btn-verify {
-  background-color: #00a1d6;
-  border: none;
+  background: rgba(0, 0, 0, 0.5);
   color: #fff;
-  padding: 8px 0;
-  margin: 0 32px;
-}
-
-body > .btn-expand {
-  display: block;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1;
+  border-radius: 50%;
   cursor: pointer;
-  border: none;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 0 4px 4px 0;
-  padding: 6px 8px;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
-  color: #666;
-  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background 0.2s;
 }
 
-body > .btn-expand:hover {
-  background: #fff;
+.douban-screenshot-popup .btn-close:hover {
+  background: rgba(0, 0, 0, 0.7);
 }
 
-.row:has(#playList) .resize-handle {
+.douban-screenshot-popup .btn-capture {
   position: absolute;
-  top: 0;
-  right: -3px;
-  width: 10px;
-  height: 100%;
-  cursor: col-resize;
-  z-index: 3;
-  background: transparent;
+  top: 4px;
+  right: 36px;
+  height: 28px;
+  border: none;
+  background: #00a1d6;
+  color: #fff;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 12px;
+  line-height: 28px;
   transition: background 0.2s;
 }
 
-.row:has(#playList) .resize-handle:hover,
-.row:has(#playList) .resize-handle.is-dragging {
-  background: rgba(0, 0, 0, 0.06);
+.douban-screenshot-popup .btn-capture:hover {
+  background: #0088b3;
 }
 
-.row:has(#playList) .resize-handle::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 2px;
-  height: 32px;
-  border-radius: 1px;
-  background: rgba(0, 0, 0, 0.15);
-  transition:
-    background 0.2s,
-    height 0.2s;
-}
-
-.row:has(#playList) .resize-handle:hover::after,
-.row:has(#playList) .resize-handle.is-dragging::after {
-  background: rgba(0, 0, 0, 0.35);
-  height: 48px;
-}
-
-#lineContent .line-res [name="lineData"].bad-source {
-  position: relative;
-}
-
-#lineContent .line-res [name="lineData"].bad-source:before {
-  content: "X";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate3d(-50%, -50%, 0);
-  color: red;
-  font-weight: 600;
-  font-size: 20px;
-}
-
-.douban-search-link {
-  margin-left: 8px;
+.douban-screenshot-popup .preview-wrap {
+  overflow: auto;
+  max-width: 100%;
+  max-height: 80vh;
 }

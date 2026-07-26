@@ -1,5 +1,8 @@
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "wxt";
+import AutoImport from "unplugin-auto-import/vite";
+import Components from "unplugin-vue-components/vite";
+import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -8,7 +11,12 @@ export default defineConfig({
     disabled: true,
   },
   manifest: {
-    host_permissions: ["https://api.dropboxapi.com/*"],
+    permissions: ["declarativeNetRequestWithHostAccess"],
+    host_permissions: [
+      "https://api.dropboxapi.com/*",
+      "https://*.douban.com/*",
+      "https://*.doubanio.com/*",
+    ],
     web_accessible_resources: [
       {
         resources: ["inject-play.js", "inject-anti-ads.js"],
@@ -17,6 +25,14 @@ export default defineConfig({
     ],
   },
   vite: () => ({
-    plugins: [tailwindcss()],
+    plugins: [
+      tailwindcss(),
+      AutoImport({
+        resolvers: [ElementPlusResolver()],
+      }),
+      Components({
+        resolvers: [ElementPlusResolver()],
+      }),
+    ],
   }),
 });

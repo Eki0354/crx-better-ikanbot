@@ -1,7 +1,28 @@
 import { sendMessage, onMessage } from "webext-bridge/background";
 import * as dropboxApi from "@/entrypoints/api/dropbox";
+import { genDoubanLink, genDoubanScreenshot } from "@/utils/douban";
 
 export default defineBackground(() => {
+  // 注册声明式规则：发给 doubanio.com 的请求强制加上 Referer
+  browser.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds: [1],
+    addRules: [
+      {
+        id: 1,
+        priority: 1,
+        action: {
+          type: "modifyHeaders",
+          requestHeaders: [
+            { header: "Referer", operation: "set", value: "https://movie.douban.com/" },
+          ],
+        },
+        condition: {
+          urlFilter: "||doubanio.com",
+          resourceTypes: ["stylesheet", "xmlhttprequest"],
+        },
+      },
+    ],
+  });
   // 转发 content-script 的 secret 消息到 popup
   onMessage("secret", ({ data, sender }) => {
     browser.tabs.remove(sender.tabId);
@@ -64,5 +85,19 @@ export default defineBackground(() => {
         }
       }
     });
+  });
+
+  // 尝试获取豆瓣链接
+  onMessage("douban_link", async ({ data }) => {
+    if (!(data as any)?.title) return;
+    const url = await genDoubanLink((data as any).title);
+    return url;
+  });
+
+  // 尝试豆瓣截图
+  onMessage("douban_screenshot", async ({ data, sender }) => {
+    if (!(data as any)?.url) return;
+    const result = await genDoubanScreenshot((data as any).url, sender.tabId);
+    return result;
   });
 });
