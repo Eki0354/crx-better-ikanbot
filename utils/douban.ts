@@ -62,10 +62,7 @@ function filterRelevantCss(css: string, $node: CheerioAPI): string {
     for (const id of ids) if (s.includes(`#${id}`)) return true;
     // 标签名需要作为独立 token 匹配，避免误匹配（如 .div 里的 div）
     for (const t of tags) {
-      const re = new RegExp(
-        `(?:^|[^.#a-z0-9_-])${t}(?:$|[^.#a-z0-9_-])`,
-        "i",
-      );
+      const re = new RegExp(`(?:^|[^.#a-z0-9_-])${t}(?:$|[^.#a-z0-9_-])`, "i");
       if (re.test(s)) return true;
     }
     return false;
@@ -243,7 +240,10 @@ export async function genDoubanScreenshot(url: string, originTabId?: number) {
       if (originTabId) {
         const tab = await browser.tabs.get(originTabId);
         if (tab?.url) {
-          const pageSvg = await QRCode.toString(tab.url, { width: 60, margin: 1 });
+          const pageSvg = await QRCode.toString(tab.url, {
+            width: 60,
+            margin: 1,
+          });
           const pageQrDataUrl = `data:image/svg+xml;base64,${btoa(pageSvg)}`;
           pageQrHtml = `<img src="${pageQrDataUrl}" alt="page QR" style="width:60px;aspect-ratio:1/1;">`;
         }
@@ -255,10 +255,14 @@ export async function genDoubanScreenshot(url: string, originTabId?: number) {
             <span style="font-size:12px;color:#666">豆瓣</span>
             <img src="${qrDataUrl}" alt="QR" style="width:60px;aspect-ratio:1/1;">
           </div>
-          ${pageQrHtml ? `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          ${
+            pageQrHtml
+              ? `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
             <span style="font-size:12px;color:#666">Ikanbot</span>
             ${pageQrHtml}
-          </div>` : ''}
+          </div>`
+              : ""
+          }
         </div>`,
       );
     } catch (e) {
@@ -267,7 +271,22 @@ export async function genDoubanScreenshot(url: string, originTabId?: number) {
     }
   }
 
-  // 4d. 将外部图片转为 data URL 内联（避免 html2canvas 跨域）
+  // 4d. 添加插件主页二维码
+  $node("#interest_sectl").each((i, el) => {
+    QRCode.toString(import.meta.env.WXT_HOME_URL, {
+      width: 60,
+      margin: 1,
+    }).then((svg) => {
+      const qrDataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
+
+      $node(el).append(`
+        <span style="font-size:12px;">分享自Better Ikanbot</span>
+        <img src="${qrDataUrl}" style="width:60px;aspect-ratio:1/1;margin-top:4px;" />
+      `);
+    });
+  });
+
+  // 4e. 将外部图片转为 data URL 内联（避免 html2canvas 跨域）
   const imgTasks = $node("img[src]")
     .map(async (_, el) => {
       const src = $node(el).attr("src")!;
