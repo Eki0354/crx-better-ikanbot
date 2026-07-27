@@ -59,6 +59,15 @@ const onOutsideClick = (e: MouseEvent) => {
     ".row:has(#playList)",
   );
   if (!node || !node.style.display || node.style.display === "none") return;
+
+  const dialogNodes = document.querySelectorAll(".el-modal-dialog");
+
+  const dialogShowing = Array.from(dialogNodes).some((node) => {
+    const style = getComputedStyle(node);
+    return style.display !== "none";
+  });
+  if (dialogShowing) return;
+
   if (node.contains(e.target as Node)) return;
 
   e.preventDefault();

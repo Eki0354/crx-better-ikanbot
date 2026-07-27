@@ -4,7 +4,7 @@
   </a>
 
   <img
-    v-if="hasExactTarget"
+    v-if="!loading"
     class="btn-douban-share"
     :src="shareIcon"
     @click="onShare"
@@ -23,11 +23,14 @@ const link = ref("");
 
 const hasExactTarget = ref(false);
 const shareDialogVisible = ref(false);
+const loading = ref(false);
 
 const init = async (title: string) => {
   if (hasExactTarget.value && link.value) return;
 
+  loading.value = true;
   const res = await sendMessage("douban_link", { title });
+  loading.value = false;
   const url = res as string;
   if (!url) return;
 

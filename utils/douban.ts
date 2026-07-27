@@ -1,6 +1,8 @@
 import { load, CheerioAPI } from "cheerio";
 import QRCode from "qrcode";
 
+const ORIGIN = "https://movie.douban.com";
+
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
@@ -183,12 +185,34 @@ async function extractStyles($: CheerioAPI, baseUrl: string): Promise<string> {
   return combinedCss;
 }
 
+export async function genQRCodeHTML(content: string, label: string = "") {
+  const svg = await QRCode.toString(content, {
+    width: 60,
+    margin: 1,
+  });
+
+  const qrDataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
+      ${label ? `<span style="font-size:12px;">${label}</span>` : ""}
+      <img src="${qrDataUrl}" style="width:60px;aspect-ratio:1/1;" />
+    </div>
+  `;
+}
+
+export const genCurrentPageQRCodeHTML = () =>
+  genQRCodeHTML(location.href, "Ikanbot");
+
+export const genHomePageQRCodeHTML = () =>
+  genQRCodeHTML(import.meta.env.WXT_HOME_URL, "分享自Better Ikanbot");
+
 export async function genDoubanScreenshot(url: string, originTabId?: number) {
   console.log("[genDoubanScreenshot] start", { url, originTabId });
 
   // 1. fetch 页面 HTML
   const res = await fetch(url, {
-    referrer: "https://movie.douban.com/",
+    referrer: ORIGIN,
     referrerPolicy: "unsafe-url",
     headers: {
       "user-agent": UA,
@@ -200,11 +224,20 @@ export async function genDoubanScreenshot(url: string, originTabId?: number) {
   const $ = load(html);
 
   // 2. 提取目标节点 HTML
-  const nodeHtml = $("#content .article .subjectwrap").prop("outerHTML");
+  let nodeHtml = $("#content .article .subjectwrap").prop("outerHTML");
   if (!nodeHtml) {
     console.log("[genDoubanScreenshot] subjectwrap not found");
     return;
   }
+
+  const extraSelectors = ["#content > h1", "#content > .rank-label"];
+  extraSelectors.forEach((se) => {
+    const extraHtml = $(se).prop("outerHTML");
+    if (!extraHtml) return;
+
+    nodeHtml = extraHtml + nodeHtml;
+  });
+
   console.log("[genDoubanScreenshot] nodeHtml length", nodeHtml.length);
 
   // 3. 提取并内联所有 CSS
@@ -232,37 +265,15 @@ export async function genDoubanScreenshot(url: string, originTabId?: number) {
   if (gactFirst) {
     try {
       // 豆瓣链接二维码
-      const svg = await QRCode.toString(url, { width: 60, margin: 1 });
-      const qrDataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
+      const doubanSvg = await genQRCodeHTML(url, "豆瓣");
 
       // 当前页面二维码
-      let pageQrHtml = "";
-      if (originTabId) {
-        const tab = await browser.tabs.get(originTabId);
-        if (tab?.url) {
-          const pageSvg = await QRCode.toString(tab.url, {
-            width: 60,
-            margin: 1,
-          });
-          const pageQrDataUrl = `data:image/svg+xml;base64,${btoa(pageSvg)}`;
-          pageQrHtml = `<img src="${pageQrDataUrl}" alt="page QR" style="width:60px;aspect-ratio:1/1;">`;
-        }
-      }
+      const pageSvg = await genCurrentPageQRCodeHTML();
 
       gactFirst.replaceWith(
         `<div style="display:flex;justify-content:space-between;padding:8px 0">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-            <span style="font-size:12px;color:#666">豆瓣</span>
-            <img src="${qrDataUrl}" alt="QR" style="width:60px;aspect-ratio:1/1;">
-          </div>
-          ${
-            pageQrHtml
-              ? `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-            <span style="font-size:12px;color:#666">Ikanbot</span>
-            ${pageQrHtml}
-          </div>`
-              : ""
-          }
+          ${doubanSvg}
+          ${pageSvg}
         </div>`,
       );
     } catch (e) {
@@ -273,20 +284,12 @@ export async function genDoubanScreenshot(url: string, originTabId?: number) {
 
   // 4d. 添加插件主页二维码
   $node("#interest_sectl").each((i, el) => {
-    QRCode.toString(import.meta.env.WXT_HOME_URL, {
-      width: 60,
-      margin: 1,
-    }).then((svg) => {
-      const qrDataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
-
-      $node(el).append(`
-        <span style="font-size:12px;">分享自Better Ikanbot</span>
-        <img src="${qrDataUrl}" style="width:60px;aspect-ratio:1/1;margin-top:4px;" />
-      `);
+    genHomePageQRCodeHTML().then((svg) => {
+      $node(el).append(svg);
     });
   });
 
-  // 4e. 将外部图片转为 data URL 内联（避免 html2canvas 跨域）
+  // 4e. 将外部图片转为 data URL 内联（避免截图跨域）
   const imgTasks = $node("img[src]")
     .map(async (_, el) => {
       const src = $node(el).attr("src")!;
@@ -321,6 +324,22 @@ export async function genDoubanScreenshot(url: string, originTabId?: number) {
     })
     .get();
   await Promise.all(imgTasks);
+
+  // 5. 将所有相对地址链接转换为绝对地址
+  $node("a").each((i, el) => {
+    const n = $node(el);
+    const href = n.attr("href") || "";
+    if (!href) return;
+
+    if (href === "comments") {
+      n.attr("href", url + href);
+    } else if (/^\/[^\/]/.test(href)) {
+      n.attr("href", ORIGIN + href);
+    }
+
+    n.attr("target", "_blank");
+  });
+
   const nodeHtmlInlined = $node.html();
   console.log(`[genDoubanScreenshot] inlined ${imgTasks.length} images`);
 

@@ -5,7 +5,7 @@ import { genDoubanLink, genDoubanScreenshot } from "@/utils/douban";
 export default defineBackground(() => {
   // 注册声明式规则：发给 doubanio.com 的请求强制加上 Referer
   browser.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: [1],
+    removeRuleIds: [1, 2],
     addRules: [
       {
         id: 1,
@@ -13,11 +13,33 @@ export default defineBackground(() => {
         action: {
           type: "modifyHeaders",
           requestHeaders: [
-            { header: "Referer", operation: "set", value: "https://movie.douban.com/" },
+            {
+              header: "Referer",
+              operation: "set",
+              value: "https://movie.douban.com/",
+            },
           ],
         },
         condition: {
           urlFilter: "||doubanio.com",
+          resourceTypes: ["stylesheet", "xmlhttprequest"],
+        },
+      },
+      {
+        id: 2,
+        priority: 1,
+        action: {
+          type: "modifyHeaders",
+          requestHeaders: [
+            {
+              header: "Referer",
+              operation: "set",
+              value: "https://ikanbot.com/",
+            },
+          ],
+        },
+        condition: {
+          urlFilter: "||imgp.ikanbot.eu.org",
           resourceTypes: ["stylesheet", "xmlhttprequest"],
         },
       },
@@ -99,5 +121,30 @@ export default defineBackground(() => {
     if (!(data as any)?.url) return;
     const result = await genDoubanScreenshot((data as any).url, sender.tabId);
     return result;
+  });
+
+  // 代理图片请求（background 的 fetch 可设 referrer，不受 CORS 限制）
+  onMessage("proxy_image", async ({ data }) => {
+    const { url, referer } = data as { url: string; referer: string };
+    if (!url || !referer) return null;
+
+    try {
+      const res = await fetch(url, {
+        referrer: referer,
+        referrerPolicy: "unsafe-url",
+      });
+      if (!res.ok) return null;
+
+      const blob = await res.blob();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      return dataUrl;
+    } catch {
+      return null;
+    }
   });
 });

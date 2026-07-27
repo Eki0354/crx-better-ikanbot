@@ -1,3 +1,5 @@
+import { sendMessage } from "webext-bridge/content-script";
+
 /**
  * 等待指定的 DOM 元素出现在页面中
  * @param selector - CSS 选择器，例如 '#app'、'.comment-box'
@@ -62,4 +64,16 @@ export function hideSeriesSidebar() {
     ".row:has(#playList)",
   );
   if (sidebar) sidebar.style.display = "none";
+}
+
+/** 通过 background 代理获取图片 base64（避免跨域/tainted canvas） */
+export async function imgToBase64(imgElement: HTMLImageElement) {
+  const url = imgElement.src;
+  if (!url) return;
+
+  const dataUrl = await sendMessage("proxy_image", {
+    url,
+    referer: location.origin,
+  });
+  if (dataUrl) imgElement.src = dataUrl as string;
 }

@@ -16,6 +16,7 @@ export default defineConfig({
       "https://api.dropboxapi.com/*",
       "https://*.douban.com/*",
       "https://*.doubanio.com/*",
+      "https://imgp.ikanbot.eu.org/*",
     ],
     web_accessible_resources: [
       {

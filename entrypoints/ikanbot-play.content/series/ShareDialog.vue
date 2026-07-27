@@ -3,22 +3,23 @@
     v-model="model"
     title="分享截图"
     draggable
-    width="734px"
+    width="705px"
+    append-to-body
+    :z-index="20000"
     @opened="onOpened"
     @close="onClose"
   >
     <div v-loading="loading" element-loading-text="正在获取豆瓣数据...">
       <div class="screenshot-preview">
-        <el-empty v-if="error" :description="error" />
-
         <div
-          v-if="ssHTML"
+          v-if="displayHTML"
           ref="shadowHostRef"
           class="preview-wrap"
-          v-html="ssHTML"
+          :class="screenshotData.html && 'has-exact-target'"
+          v-html="displayHTML"
         />
 
-        <el-empty v-else-if="!loading && !error" description="暂无数据" />
+        <el-empty v-else :description="error || '暂无数据'" />
       </div>
     </div>
 
@@ -36,7 +37,8 @@
 import { sendMessage } from "webext-bridge/content-script";
 import { ElNotification } from "element-plus";
 import "element-plus/theme-chalk/el-notification.css";
-import html2canvas from "html2canvas";
+import { imgToBase64 } from "../utils";
+import { domToBlob } from "modern-screenshot";
 
 type ScreenshotData = {
   url: string;
@@ -57,10 +59,12 @@ const loading = ref(false);
 const error = ref("");
 const capturing = ref(false);
 const screenshotData = reactive<ScreenshotData>({ url: "", html: "", css: "" });
+const pageHTML = ref("");
 
-const ssHTML = computed(() => {
-  const { css, html } = screenshotData;
-  return html ? `<style>${css}</style>${html}` : "";
+const displayHTML = computed(() => {
+  if (screenshotData.html)
+    return `<style>${screenshotData.css}</style>${screenshotData.html}`;
+  return pageHTML.value || "";
 });
 
 async function onOpened() {
@@ -75,17 +79,32 @@ async function onOpened() {
   screenshotData.css = "";
 
   try {
-    const data = (await sendMessage("douban_screenshot", {
-      url: props.link,
-    })) as ScreenshotData | undefined;
+    let data: ScreenshotData | undefined = undefined;
 
-    if (!data?.html || !data?.css) {
-      error.value = "未获取到豆瓣页面数据";
-      return;
+    if (props.link.startsWith("https://movie.douban")) {
+      data = (await sendMessage("douban_screenshot", {
+        url: props.link,
+      })) as ScreenshotData | undefined;
+
+      screenshotData.html = data?.html || "";
+      screenshotData.css = data?.css || "";
     }
 
-    screenshotData.html = data.html;
-    screenshotData.css = data.css;
+    if (!data?.html) {
+      const [currentPageSvg, homePageSvg] = await Promise.all([
+        genCurrentPageQRCodeHTML(),
+        genHomePageQRCodeHTML(),
+      ]);
+      // 没获取到豆瓣数据时，展示页面自身的内容
+      const el = document.querySelector(".row:has(#playList) .result-info");
+
+      // 封面图片跨域，必须手动请求转为base64才能截图成功
+      if (el) {
+        await imgToBase64(el.querySelector(".item-root > .cover")!);
+      }
+
+      pageHTML.value = (el?.outerHTML || "") + currentPageSvg + homePageSvg;
+    }
   } catch (e) {
     console.log("[ShareDialog] request screenshot error", e);
     error.value = "请求截图数据失败";
@@ -95,6 +114,7 @@ async function onOpened() {
 }
 
 function onClose() {
+  pageHTML.value = "";
   screenshotData.html = "";
   screenshotData.css = "";
   error.value = "";
@@ -106,28 +126,12 @@ async function onCopy() {
   capturing.value = true;
 
   try {
-    const node = shadowHostRef.value.querySelector(":scope .subjectwrap") as HTMLElement | null;
-    if (!node) return;
-
-    // 截图前把元素设为 inline-block，宽度自适应内容，避免右侧空白
-    node.style.display = "inline-block";
-    node.style.width = "auto";
-    node.style.padding = "4px 8px";
-
-    const canvas = await html2canvas(node, {
-      useCORS: true,
-      ignoreElements: (el) => el.classList.contains("gact"),
-    });
-
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/png"),
-    );
-    if (!blob) return;
+    const blob = await domToBlob(shadowHostRef.value);
 
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
 
     ElNotification({
-      type: 'success',
+      type: "success",
       title: "提示",
       message: "已复制到剪贴板",
       zIndex: 99999,
@@ -142,21 +146,39 @@ async function onCopy() {
 
 <style lang="scss" scoped>
 .screenshot-preview {
-  min-height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .preview-wrap {
-  margin: 0 auto;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
   width: 700px;
-  overflow: hidden;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
   background: #fff;
   box-sizing: border-box;
+  padding: 4px 8px;
+
+  &.has-exact-target {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
   :deep(.subjectwrap) {
     margin: 0 auto;
-    padding: 4px 8px;
+  }
+
+  :deep(.result-info) {
+    flex: 1;
+
+    .douban-search-link,
+    .btn-douban-share {
+      display: none;
+    }
   }
 }
 </style>
