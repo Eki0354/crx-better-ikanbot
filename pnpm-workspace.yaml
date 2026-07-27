@@ -1,2 +1,0 @@
-patchedDependencies:
-  '@vueuse/core': patches/@vueuse__core.patch
