@@ -262,6 +262,11 @@ export async function genDoubanScreenshot(url: string, originTabId?: number) {
     else $node(el).remove();
   });
 
+  if (!gactFirst) {
+    $node('#mainpic').append("<p class='gact'></p>");
+    gactFirst = $node('#mainpic .gact').first();
+  }
+
   if (gactFirst) {
     try {
       // 豆瓣链接二维码
