@@ -6,11 +6,91 @@ const ORIGIN = "https://movie.douban.com";
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
+/** 全角转半角、压缩空白、转小写 */
+function normalizeText(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[\uFF01-\uFF5E]/g, (ch) =>
+      String.fromCharCode(ch.charCodeAt(0) - 0xfee0),
+    )
+    .replace(/\u3000/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** 去除所有非字母数字/汉字字符，用于忽略标点差异（如"蜘蛛侠：平行宇宙"vs"蜘蛛侠 平行宇宙"）的匹配 */
+function compactText(s: string): string {
+  return normalizeText(s).replace(/[^a-z0-9\u4e00-\u9fa5]/g, "");
+}
+
+/** 提取标题/关键词中的年份 */
+function extractYear(s: string): number | null {
+  const m = normalizeText(s).match(/\((\d{4})\)/);
+  return m ? Number(m[1]) : null;
+}
+
+/** 去掉标题末尾的 (年份) 后缀 */
+function stripYear(title: string): string {
+  return normalizeText(title).replace(/\s*\(\d{4}\)\s*$/, "");
+}
+
+/**
+ * 对单个搜索结果按与关键词的相关度打分：
+ * - 标题匹配（忽略标点/年份差异）为最强信号
+ * - 年份一致加分、不一致减分
+ * - 有评分加分（正片通常有评分）、未上映/暂无评分减分
+ * - 纪录片/花絮/短片/预告等非正片降权
+ */
+function scoreDoubanItem(item: any, keyword: string): number {
+  const title = String(item.title || "");
+  const titleBase = compactText(stripYear(title));
+  const kw = compactText(keyword);
+
+  let score = 0;
+
+  if (titleBase === kw) score += 120;
+  else if (titleBase.startsWith(kw)) score += 110;
+  else if (titleBase.includes(kw)) score += 100;
+  else if (kw.includes(titleBase) && titleBase.length >= 2) score += 85;
+
+  const kwYear = extractYear(keyword);
+  const titleYear = extractYear(title);
+  if (kwYear && titleYear) {
+    if (kwYear === titleYear) score += 50;
+    else score -= 40;
+  }
+
+  const rating = item.rating?.value ?? 0;
+  if (rating > 0) score += rating; // 0-10 分制评分直接加权，用于同系列内排序
+
+  if (/上映|暂无评分/.test(String(item.rating?.rating_info || ""))) {
+    score -= 25;
+  }
+
+  if (
+    /纪录|访谈|花絮|幕后|回顾|预告|特辑|采访|短片/.test(
+      compactText(title + " " + (item.abstract || "")),
+    )
+  ) {
+    score -= 30;
+  }
+
+  return score;
+}
+
 export async function genDoubanLink(keyword: string) {
   const url = `https://search.douban.com/movie/subject_search?search_text=${encodeURIComponent(keyword)}&cat=1002`;
 
   try {
-    const res = await fetch(url, { method: "get" });
+    const res = await fetch(url, {
+      method: "get",
+      credentials: "include",
+      referrer: ORIGIN,
+      referrerPolicy: "unsafe-url",
+      headers: {
+        "user-agent": UA,
+      },
+    });
     const html = await res.text();
     const encryptData = (html || "").match(
       /window.__DATA__ = ([^\r\n]+);/,
@@ -28,14 +108,33 @@ export async function genDoubanLink(keyword: string) {
 
     if (!resData) return null;
 
-    const { items = [] } = resData;
+    const { items = [], error_info } = resData;
+    if (error_info) {
+      console.log("[genDoubanLink] 豆瓣提示:", error_info);
+    }
     const list = items.filter(
       (item: any) => item.tpl_name === "search_subject",
     );
 
-    if (list.length !== 1) return null;
+    if (list.length === 0) return null;
+    if (list.length === 1) {
+      return `https://movie.douban.com/subject/${list[0].id}/`;
+    }
 
-    return `https://movie.douban.com/subject/${list[0].id}/`;
+    // 多个结果：按相关度打分排序，取匹配最可靠的一项
+    const scored = list
+      .map((item: any) => ({ item, score: scoreDoubanItem(item, keyword) }))
+      .sort((a: any, b: any) => b.score - a.score);
+    console.log(
+      "[genDoubanLink] 候选:",
+      scored.map((s: any) => `${s.item.title} => ${s.score.toFixed(1)}`),
+    );
+
+    const best = scored[0];
+    // 无任何可靠的标题匹配时放弃，避免给出错误链接
+    if (!best || best.score < 60) return null;
+
+    return `https://movie.douban.com/subject/${best.item.id}/`;
   } catch (error) {
     return null;
   }
