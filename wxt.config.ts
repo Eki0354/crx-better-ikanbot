@@ -35,5 +35,20 @@ export default defineConfig({
         resolvers: [ElementPlusResolver()],
       }),
     ],
+    build: {
+      rollupOptions: {
+        // 过滤第三方库（如 @vueuse/core）中位置不当的 #__PURE__ 注释警告：
+        // 这类注释仅影响 tree-shaking 优化精度，无害，且 node_modules 源码无法直接修改
+        onLog(level, log, handler) {
+          if (
+            log.code === "INVALID_ANNOTATION" &&
+            log.id?.includes("node_modules")
+          ) {
+            return;
+          }
+          handler(level, log);
+        },
+      },
+    },
   }),
 });
