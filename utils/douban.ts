@@ -207,18 +207,237 @@ export const genCurrentPageQRCodeHTML = () =>
 export const genHomePageQRCodeHTML = () =>
   genQRCodeHTML(import.meta.env.WXT_HOME_URL, "分享自Better Ikanbot");
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * 解析豆瓣 PoW 验证页（sec.douban.com 的"载入中 ..."页）中的表单。
+ * 该页带有一个 #sec 表单：JS 计算 sha512(cha+nonce) 前 difficulty 位为 0 的
+ * nonce 作为 sol，再 POST 回 /c 完成验证后跳转到真实页面。
+ */
+function parsePowForm(html: string): {
+  tok: string;
+  cha: string;
+  red: string;
+  difficulty: number;
+} | null {
+  const tok = html.match(/id="tok" name="tok" value="([^"]+)"/)?.[1];
+  const cha = html.match(/id="cha" name="cha" value="([^"]+)"/)?.[1];
+  const red = html.match(/id="red" name="red" value="([^"]+)"/)?.[1];
+  if (!tok || !cha || !red) return null;
+
+  const difficulty = Number(html.match(/difficulty\s*=\s*(\d+)/)?.[1]);
+  return { tok, cha, red, difficulty: Number.isFinite(difficulty) ? difficulty : 4 };
+}
+
+/**
+ * 计算 PoW：找到 nonce 使得 sha512(cha + nonce) 的十六进制前
+ * `difficulty` 位全为 0（等价于前几个字节为 0）。
+ */
+async function solveDoubanPow(
+  cha: string,
+  difficulty: number,
+): Promise<string> {
+  const encoder = new TextEncoder();
+  const fullBytes = Math.floor(difficulty / 2);
+  const halfByte = difficulty % 2; // difficulty 为奇数时还需检查末字节高 4 位
+  let nonce = 0;
+
+  for (;;) {
+    nonce++;
+    const digest = await crypto.subtle.digest(
+      "SHA-512",
+      encoder.encode(cha + nonce),
+    );
+    const bytes = new Uint8Array(digest);
+    let ok = true;
+    for (let i = 0; i < fullBytes; i++) {
+      if (bytes[i] !== 0) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok && halfByte && (bytes[fullBytes] & 0xf0) !== 0) ok = false;
+    if (ok) return String(nonce);
+  }
+}
+
+/**
+ * 模拟执行豆瓣 PoW 验证：计算 nonce 并 POST 回执到 sec.douban.com/c。
+ * 验证通过后服务器返回 302 重定向到真实页面并种下 cookie。
+ * @returns 验证结果；失败返回 null
+ */
+async function solveDoubanPowChallenge(pow: {
+  tok: string;
+  cha: string;
+  red: string;
+  difficulty: number;
+}): Promise<{ html: string; followUrl?: string } | null> {
+  try {
+    const sol = await solveDoubanPow(pow.cha, pow.difficulty);
+    console.log(`[fetchDoubanHtml] PoW 计算完成 sol=${sol}`);
+
+    const form = new URLSearchParams({
+      tok: pow.tok,
+      cha: pow.cha,
+      sol,
+      red: pow.red,
+    });
+
+    // redirect: "manual" 以便读取 302 的 Location 和 Set-Cookie
+    // （浏览器会自动存储 cookie，重试时携带；Node/undici 需手动管理）
+    const res = await fetch("https://sec.douban.com/c", {
+      method: "POST",
+      redirect: "manual",
+      credentials: "include",
+      referrer: "https://sec.douban.com/",
+      referrerPolicy: "unsafe-url",
+      headers: {
+        "user-agent": UA,
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: form,
+    });
+    const html = await res.text();
+    const location = res.headers.get("location");
+
+    console.log(
+      `[fetchDoubanHtml] PoW 回执 status=${res.status} length=${html.length} location=${location}`,
+    );
+
+    // 200 且已含目标节点：验证通过并直接返回页面
+    if (res.ok && load(html)("#content .article .subjectwrap").length > 0) {
+      return { html };
+    }
+    // 302/303：验证通过，跟随重定向（cookie 已种下）
+    if (res.status === 302 || res.status === 303) {
+      return { html, followUrl: location || pow.red };
+    }
+    return null;
+  } catch (error) {
+    console.error("[fetchDoubanHtml] PoW 失败", error);
+    return null;
+  }
+}
+
+/**
+ * 解析豆瓣等待页中的跳转信息（meta refresh 或 JS location 跳转），
+ * 作为 PoW 验证页之外的兜底处理。
+ */
+function parseRedirect(
+  html: string,
+  baseUrl: string,
+): { delayMs: number; url?: string } | null {
+  // <meta http-equiv="refresh" content="1;url=https://...">
+  const metaTag = html.match(/<meta[^>]*http-equiv=["']?refresh["']?[^>]*>/i)?.[0];
+  if (metaTag) {
+    const content = metaTag.match(/content=["']([^"']+)["']/i)?.[1];
+    if (content) {
+      const delay = Number(content.split(";")[0]);
+      const urlPart = content.match(/url\s*=\s*(.+)$/i)?.[1];
+      return {
+        delayMs: Number.isFinite(delay) ? delay * 1000 : 1200,
+        url: urlPart ? new URL(urlPart.trim(), baseUrl).href : undefined,
+      };
+    }
+  }
+
+  // JS 跳转：location.href / location.replace，附带 setTimeout 延迟
+  const jsHref = html.match(
+    /location\.(?:href|replace)\s*=\s*["']([^"']+)["']/i,
+  )?.[1];
+  if (jsHref) {
+    const jsDelay = Number(
+      html.match(/setTimeout\([^,]*,\s*(\d+)\s*\)/i)?.[1],
+    );
+    return {
+      delayMs: Number.isFinite(jsDelay) ? jsDelay : 1200,
+      url: new URL(jsHref, baseUrl).href,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * 抓取豆瓣页面 HTML，自动处理豆瓣反爬：
+ * 1. 首次请求可能 302 到 sec.douban.com 的 PoW 验证页（"载入中 ..."），
+ *    通过 credentials: "include" 让浏览器自动存储/携带 cookie；
+ * 2. 检测到验证页时模拟计算 PoW nonce 并 POST 回执，通过后重取详情页；
+ * 3. 其他等待页（meta refresh / JS 跳转）则等待对应延迟后重试。
+ */
+async function fetchDoubanHtml(
+  url: string,
+  maxAttempts = 3,
+): Promise<string> {
+  let lastHtml = "";
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch(url, {
+      credentials: "include",
+      referrer: ORIGIN,
+      referrerPolicy: "unsafe-url",
+      headers: {
+        "user-agent": UA,
+      },
+    });
+    const html = await res.text();
+    console.log(
+      `[fetchDoubanHtml] attempt ${attempt}/${maxAttempts} status=${res.status} length=${html.length}`,
+    );
+
+    // 429 限流：等待后重试，避免连续触发风控
+    if (res.status === 429) {
+      lastHtml = html;
+      await sleep(3000);
+      continue;
+    }
+
+    // 已拿到真实详情页（目标节点存在）
+    if (load(html)("#content .article .subjectwrap").length > 0) {
+      return html;
+    }
+
+    lastHtml = html;
+
+    // 豆瓣 PoW 验证页：模拟计算 nonce 并 POST 回执
+    const pow = parsePowForm(html);
+    if (pow) {
+      const solved = await solveDoubanPowChallenge(pow);
+      if (solved) {
+        if (
+          load(solved.html)("#content .article .subjectwrap").length > 0
+        ) {
+          return solved.html;
+        }
+        // 验证通过（302 已种下 cookie）：跟随重定向重新抓取
+        lastHtml = solved.html;
+        if (solved.followUrl) url = solved.followUrl;
+      }
+      continue;
+    }
+
+    // 其他等待页（meta refresh / JS 跳转）：等待对应延迟后重试
+    const redirect = parseRedirect(html, url);
+    if (redirect) {
+      console.log("[fetchDoubanHtml] 检测到等待页跳转", redirect);
+      await sleep(redirect.delayMs);
+      if (redirect.url) url = redirect.url;
+      continue;
+    }
+
+    // 无跳转特征（如风控提示页）：等待后重试原 URL
+    console.log("[fetchDoubanHtml] 疑似等待页（无跳转特征），稍后重试");
+    await sleep(1500);
+  }
+
+  return lastHtml;
+}
+
 export async function genDoubanScreenshot(url: string, originTabId?: number) {
   console.log("[genDoubanScreenshot] start", { url, originTabId });
 
-  // 1. fetch 页面 HTML
-  const res = await fetch(url, {
-    referrer: ORIGIN,
-    referrerPolicy: "unsafe-url",
-    headers: {
-      "user-agent": UA,
-    },
-  });
-  const html = await res.text();
+  // 1. fetch 页面 HTML（自动处理豆瓣"请稍候"等待页并重试）
+  const html = await fetchDoubanHtml(url);
   console.log("[genDoubanScreenshot] fetched html length", html.length);
 
   const $ = load(html);
