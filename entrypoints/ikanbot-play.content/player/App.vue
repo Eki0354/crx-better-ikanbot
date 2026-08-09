@@ -2,12 +2,20 @@
   <Teleport to="#player-wrap">
     <video ref="videoRef" style="aspect-ratio: 16/9"></video>
   </Teleport>
+
+  <template v-if="isReady">
+    <NextButton />
+  </template>
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { usePlayerStore } from "./store";
+import NextButton from "./buttons/NextButton.vue";
 
 const playerStore = usePlayerStore();
+
+const { isReady } = storeToRefs(playerStore);
 
 const videoRef = ref<HTMLVideoElement | null>(null);
 
@@ -35,6 +43,38 @@ body.no-scroll {
 #player-wrap {
   > .video-js {
     display: none;
+  }
+
+  .plyr__controls {
+    .plyr__controls__item {
+      &:nth-child(1) {
+        order: 1;
+      }
+
+      &:nth-child(2) {
+        order: 4;
+      }
+
+      &:nth-child(3) {
+        order: 4;
+      }
+
+      &:nth-child(4) {
+        order: 4;
+      }
+
+      &:nth-child(5) {
+        order: 4;
+      }
+
+      &:nth-child(6) {
+        order: 4;
+      }
+
+      &:nth-child(7) {
+        order: 4;
+      }
+    }
   }
 }
 </style>

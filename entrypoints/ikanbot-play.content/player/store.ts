@@ -3,18 +3,12 @@ import Hls from "hls.js";
 import Plyr from "plyr";
 import { readVideoProgress, saveVideoProgress } from "./progress";
 import { getVideoM3U8 } from "../series";
-import {
-  createDownloadBtn,
-  createImmersiveBtn,
-  createNextBtn,
-  createScreenshotMenuItem,
-  createSeriesBtn,
-} from "./buttons";
 
 export const usePlayerStore = defineStore("player", () => {
   const hls = ref<Hls | null>(null);
   const player = ref<Plyr | null>(null);
   const currentSource = ref("");
+  const isReady = ref(false);
 
   const playSource = (source: string) => {
     hls.value?.loadSource(source);
@@ -69,11 +63,7 @@ export const usePlayerStore = defineStore("player", () => {
       }
     });
 
-    playerInstance.on("ready", createSeriesBtn);
-    playerInstance.on("ready", createNextBtn);
-    playerInstance.on("ready", createDownloadBtn);
-    playerInstance.on("ready", createImmersiveBtn);
-    playerInstance.on("ready", createScreenshotMenuItem);
+    playerInstance.on("ready", () => (isReady.value = true));
 
     playerInstance.on("timeupdate", saveVideoProgress);
 
@@ -91,5 +81,5 @@ export const usePlayerStore = defineStore("player", () => {
     return { hls: hlsInstance, player: playerInstance, source };
   };
 
-  return { player, currentSource, hls, init, playSource };
+  return { player, currentSource, hls, isReady, init, playSource };
 });
