@@ -84,3 +84,12 @@ const fixSeries = (ctx: ContentScriptContext) => {
 };
 
 export { getVideoId, getVideoTitle, getVideoM3U8, fixBtns, fixSeries };
+
+export const playNext = () => {
+  const node = document.querySelector(
+    '#lineContent .line-res [name="lineData"].active ~ [name="lineData"]',
+  ) as HTMLElement;
+  if (!node) return;
+
+  node.click();
+};

@@ -5,7 +5,7 @@
     data-plyr-tooltip="下一集"
     data-plyr-tooltip-persistent="false"
     aria-label="下一集"
-    @click.prevent.stop="onClick"
+    @click.prevent.stop="playNext"
   >
     <img
       :src="nextIcon"
@@ -17,15 +17,7 @@
 
 <script setup lang="ts">
 import nextIcon from "~/assets/next.png";
-
-const onClick = (e: MouseEvent) => {
-  const node = document.querySelector(
-    '#lineContent .line-res [name="lineData"].active ~ [name="lineData"]',
-  ) as HTMLElement;
-  if (!node) return;
-
-  node.click();
-};
+import { playNext } from "../../series/main";
 </script>
 
 <style scoped lang="scss">

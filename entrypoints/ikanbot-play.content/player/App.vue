@@ -12,6 +12,7 @@
 
   <Teleport v-if="isReady" to=".plyr__menu__container [role='menu']">
     <ScreenshotButton />
+    <AutoplayButton />
   </Teleport>
 </template>
 
@@ -23,6 +24,7 @@ import SeriesButton from "./buttons/SeriesButton.vue";
 import ImmersiveButton from "./buttons/ImmersiveButton.vue";
 import DownloadButton from "./buttons/DownloadButton.vue";
 import ScreenshotButton from "./buttons/ScreenshotButton.vue";
+import AutoplayButton from "./buttons/AutoplayButton.vue";
 
 const playerStore = usePlayerStore();
 
