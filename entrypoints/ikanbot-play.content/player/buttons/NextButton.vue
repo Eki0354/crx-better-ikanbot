@@ -1,20 +1,18 @@
 <template>
-  <Teleport to=".plyr__controls">
-    <button
-      class="plyr__control plyr__control--custom plyr__control--next-episode"
-      data-plyr="data-plyr"
-      data-plyr-tooltip="下一集"
-      data-plyr-tooltip-persistent="false"
-      aria-label="下一集"
-      @click.prevent.stop="onClick"
-    >
-      <img
-        :src="nextIcon"
-        alt="下一集"
-        style="width: 18px; aspect-ratio: square"
-      />
-    </button>
-  </Teleport>
+  <button
+    class="plyr__control plyr__control--custom plyr__control--next-episode"
+    data-plyr="data-plyr"
+    data-plyr-tooltip="下一集"
+    data-plyr-tooltip-persistent="false"
+    aria-label="下一集"
+    @click.prevent.stop="onClick"
+  >
+    <img
+      :src="nextIcon"
+      alt="下一集"
+      style="width: 18px; aspect-ratio: square"
+    />
+  </button>
 </template>
 
 <script setup lang="ts">

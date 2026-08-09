@@ -3,15 +3,26 @@
     <video ref="videoRef" style="aspect-ratio: 16/9"></video>
   </Teleport>
 
-  <template v-if="isReady">
+  <Teleport v-if="isReady" to=".plyr__controls">
     <NextButton />
-  </template>
+    <SeriesButton />
+    <ImmersiveButton />
+    <DownloadButton />
+  </Teleport>
+
+  <Teleport v-if="isReady" to=".plyr__menu__container [role='menu']">
+    <ScreenshotButton />
+  </Teleport>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { usePlayerStore } from "./store";
 import NextButton from "./buttons/NextButton.vue";
+import SeriesButton from "./buttons/SeriesButton.vue";
+import ImmersiveButton from "./buttons/ImmersiveButton.vue";
+import DownloadButton from "./buttons/DownloadButton.vue";
+import ScreenshotButton from "./buttons/ScreenshotButton.vue";
 
 const playerStore = usePlayerStore();
 
@@ -56,23 +67,23 @@ body.no-scroll {
       }
 
       &:nth-child(3) {
-        order: 4;
+        order: 5;
       }
 
       &:nth-child(4) {
-        order: 4;
+        order: 6;
       }
 
       &:nth-child(5) {
-        order: 4;
+        order: 7;
       }
 
       &:nth-child(6) {
-        order: 4;
+        order: 8;
       }
 
       &:nth-child(7) {
-        order: 4;
+        order: 11;
       }
     }
   }
