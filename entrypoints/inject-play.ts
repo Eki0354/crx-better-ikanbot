@@ -6,7 +6,9 @@ export default defineUnlistedScript(() => {
 
     switch (event.data?.type) {
       case "DISPOSE_SOURCE_VIDEO":
-        (document.getElementById("ikanbot-player") as any)?.player?.dispose();
+        const node = document.getElementById("ikanbot-player");
+        (node as any)?.player?.dispose();
+        node?.remove();
         break;
       case "SAVE_PLAY_HISTORY":
         (window as any).savePlayHistory(event.data.data);

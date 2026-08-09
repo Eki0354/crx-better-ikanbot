@@ -1,5 +1,5 @@
 import "./plyr.css";
-import { replacePlayer } from "./player";
+import { initPlayer } from "./player/main";
 import { fixBtns, fixSeries } from "./series";
 
 export default defineContentScript({
@@ -7,7 +7,7 @@ export default defineContentScript({
   async main(ctx) {
     await injectScript("/inject-play.js");
 
-    replacePlayer(ctx);
+    initPlayer(ctx);
     fixSeries(ctx);
     fixBtns(ctx);
   },

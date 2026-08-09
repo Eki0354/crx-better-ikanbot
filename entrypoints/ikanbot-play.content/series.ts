@@ -1,5 +1,5 @@
 import { ContentScriptContext } from "#imports";
-import { playVideo } from "./player";
+import { usePlayerStore } from "./player/store";
 import SeriesApp from "./series/App.vue";
 
 type PlayHistory = {
@@ -58,7 +58,7 @@ const fixBtns = (ctx: ContentScriptContext) => {
           const source = getVideoM3U8();
           if (!source) return;
 
-          playVideo(source);
+          usePlayerStore().playSource(source);
         },
         true,
       );
