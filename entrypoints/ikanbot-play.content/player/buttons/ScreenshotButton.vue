@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { getVideoTitle } from "../../series";
+import { getVideoTitle } from "../../series/main";
 
 /** 当前视频画面截图并下载为 PNG */
 const takeScreenshot = () => {

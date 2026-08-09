@@ -1,6 +1,6 @@
 import { onMessage, sendMessage } from "webext-bridge/content-script";
 import debounce from "lodash-es/debounce";
-import { getVideoM3U8 } from "../series";
+import { getVideoM3U8 } from "../series/main";
 
 const KEY_PLAYBACK_PROGRESS = "playback_progress";
 

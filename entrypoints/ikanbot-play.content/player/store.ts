@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import Hls from "hls.js";
 import Plyr from "plyr";
 import { readVideoProgress, saveVideoProgress } from "./progress";
-import { getVideoM3U8 } from "../series";
+import { getVideoM3U8 } from "../series/main";
 
 export const usePlayerStore = defineStore("player", () => {
   const hls = ref<Hls | null>(null);

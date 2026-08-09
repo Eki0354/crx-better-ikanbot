@@ -1,6 +1,5 @@
-import "./plyr.css";
 import { initPlayer } from "./player/main";
-import { fixBtns, fixSeries } from "./series";
+import { fixBtns, fixSeries } from "./series/main";
 
 export default defineContentScript({
   matches: ["*://www.ikanbot.com/play/*"],

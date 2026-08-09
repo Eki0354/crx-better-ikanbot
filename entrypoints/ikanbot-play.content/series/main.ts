@@ -1,6 +1,6 @@
 import { ContentScriptContext } from "#imports";
-import { usePlayerStore } from "./player/store";
-import SeriesApp from "./series/App.vue";
+import { usePlayerStore } from "../player/store";
+import SeriesApp from "./App.vue";
 
 type PlayHistory = {
   date: number;
