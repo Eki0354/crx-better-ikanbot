@@ -170,6 +170,38 @@ async function onCopy() {
 
   :deep(.subjectwrap) {
     margin: 0 auto;
+
+    #info {
+      // 只有"标签: 值"结构（含 .attrs 区）的行做 flex 省略，
+      // 避免把"类型/国家"等直接 span 行拆成块级换行
+      > span:has(> .attrs) {
+        display: flex;
+        align-items: baseline;
+        min-width: 0;
+
+        .pl {
+          // 标签不收缩：否则长内容按比例收缩时会把标签压窄导致竖排换行（行高翻倍）
+          flex-shrink: 0;
+          white-space: nowrap;
+        }
+
+        .attrs {
+          flex: 1 1 auto;
+          min-width: 0; // 允许收缩，否则长内容会撑破 flex 容器
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 3;
+          white-space: normal;
+          word-break: break-all;
+        }
+      }
+
+      // flex 行已块级占满，行尾 <br/> 会残留空行，隐藏之
+      > span:has(> .attrs) + br {
+        display: none;
+      }
+    }
   }
 
   :deep(.result-info) {
