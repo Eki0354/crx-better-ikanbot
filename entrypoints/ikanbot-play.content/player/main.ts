@@ -9,6 +9,8 @@ export function initPlayer(ctx: ContentScriptContext) {
     anchor: "#lineContent .line-res .active[name='lineData']",
     // anchor: "#player-wrap > .video-js > video",
     onMount: (container) => {
+      container.style.display = "none";
+
       const app = createApp(App);
 
       const pinia = createPinia();
