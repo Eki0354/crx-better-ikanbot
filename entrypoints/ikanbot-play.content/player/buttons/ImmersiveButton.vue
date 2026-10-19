@@ -1,22 +1,15 @@
 <template>
-  <button
-    class="plyr__control plyr__control--custom plyr__control--immersive"
+  <BaseActionButton
     data-plyr="immersive"
-    data-plyr-tooltip="沉浸模式"
-    data-plyr-tooltip-persistent="false"
-    aria-label="沉浸模式"
+    :icon="immersiveIcon"
+    :tooltip-key="immActive ? 'exitImmersive' : 'enterImmersive'"
     @click.prevent.stop="toggle"
-  >
-    <img
-      :src="immersiveIcon"
-      alt="沉浸模式"
-      style="width: 18px; aspect-ratio: square"
-    />
-  </button>
+  />
 </template>
 
 <script setup lang="ts">
 import immersiveIcon from "~/assets/immersive.png";
+import BaseActionButton from "./BaseActionButton.vue";
 
 const immActive = ref(false);
 

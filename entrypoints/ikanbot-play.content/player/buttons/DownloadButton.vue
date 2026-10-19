@@ -1,18 +1,9 @@
 <template>
-  <button
-    class="plyr__control plyr__control--custom plyr__control--download"
+  <BaseActionButton
     data-plyr="download"
-    data-plyr-tooltip="下载视频"
-    data-plyr-tooltip-persistent="false"
-    aria-label="下载视频"
+    :icon="downloadIcon"
     @click.prevent.stop="onTogglePanel"
-  >
-    <img
-      :src="downloadIcon"
-      alt="下载"
-      style="width: 18px; aspect-ratio: square"
-    />
-  </button>
+  />
 
   <div v-if="panelVisible" class="plyr__download-panel" @click.stop>
     <div class="plyr__download-panel-header">
@@ -128,6 +119,7 @@
 
 <script setup lang="ts">
 import { usePlayerStore } from "../store";
+import BaseActionButton from "./BaseActionButton.vue";
 import {
   downloadState,
   downloadIcon,

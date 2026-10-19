@@ -60,31 +60,47 @@ body.no-scroll {
 
   .plyr__controls {
     .plyr__controls__item {
-      &:nth-child(1) {
+      &[data-plyr="play"] {
         order: 1;
       }
 
-      &:nth-child(2) {
+      &[data-plyr="next"] {
+        order: 2;
+      }
+
+      &[data-plyr="series"] {
+        order: 3;
+      }
+
+      &.plyr__progress__container {
         order: 4;
       }
 
-      &:nth-child(3) {
+      &[aria-label="Current time"] {
         order: 5;
       }
 
-      &:nth-child(4) {
+      &[aria-label="Duration"] {
         order: 6;
       }
 
-      &:nth-child(5) {
+      &.plyr__volume {
         order: 7;
       }
 
-      &:nth-child(6) {
+      &.plyr__menu {
         order: 8;
       }
 
-      &:nth-child(7) {
+      &[data-plyr="download"] {
+        order: 9;
+      }
+
+      &[data-plyr="immersive"] {
+        order: 10;
+      }
+
+      &[data-plyr="fullscreen"] {
         order: 11;
       }
     }

@@ -30,6 +30,7 @@ export const usePlayerStore = defineStore("player", () => {
       keyboard: {
         global: true,
       },
+      tooltips: { controls: true },
       controls: [
         "play-large",
         "play",
@@ -42,8 +43,19 @@ export const usePlayerStore = defineStore("player", () => {
         "fullscreen",
       ],
       i18n: {
+        play: "播放",
+        pause: "暂停",
+        mute: "静音(m)",
+        unmute: "取消静音(m)",
+        enterFullscreen: "进入全屏(f)",
+        exitFullscreen: "退出全屏(f)",
+        settings: "设置",
+        download: "下载",
+        next: "下一集(])",
         speed: "速度",
         normal: "1.0x",
+        enterImmersive: "网页全屏",
+        exitImmersive: "退出网页全屏",
       },
     });
 
