@@ -85,6 +85,22 @@ const fixSeries = (ctx: ContentScriptContext) => {
 
 export { getVideoId, getVideoTitle, getVideoM3U8, fixBtns, fixSeries };
 
+export const hasPreviewSeries = () => {
+  const node = document.querySelector(
+    '#lineContent .line-res [name="lineData"]:has(+ [name="lineData"].active)',
+  ) as HTMLElement;
+  return !!node;
+}
+
+export const playPrev = () => {
+  const node = document.querySelector(
+    '#lineContent .line-res [name="lineData"]:has(+ [name="lineData"].active)',
+  ) as HTMLElement;
+  if (!node) return;
+
+  node.click();
+};
+
 export const playNext = () => {
   const node = document.querySelector(
     '#lineContent .line-res [name="lineData"].active ~ [name="lineData"]',

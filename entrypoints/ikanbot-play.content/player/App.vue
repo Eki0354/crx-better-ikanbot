@@ -4,6 +4,7 @@
   </Teleport>
 
   <Teleport v-if="isReady" to=".plyr__controls">
+    <PrevButton v-if="hasPrevSeries" />
     <NextButton />
     <SeriesButton />
     <ImmersiveButton />
@@ -25,10 +26,11 @@ import ImmersiveButton from "./buttons/ImmersiveButton.vue";
 import DownloadButton from "./buttons/DownloadButton.vue";
 import ScreenshotButton from "./buttons/ScreenshotButton.vue";
 import AutoplayButton from "./buttons/AutoplayButton.vue";
+import PrevButton from "./buttons/PrevButton.vue";
 
 const playerStore = usePlayerStore();
 
-const { isReady } = storeToRefs(playerStore);
+const { isReady, hasPrevSeries } = storeToRefs(playerStore);
 
 const videoRef = ref<HTMLVideoElement | null>(null);
 
@@ -60,48 +62,52 @@ body.no-scroll {
 
   .plyr__controls {
     .plyr__controls__item {
-      &[data-plyr="play"] {
-        order: 1;
-      }
-
-      &[data-plyr="next"] {
-        order: 2;
-      }
-
-      &[data-plyr="series"] {
-        order: 3;
-      }
-
-      &.plyr__progress__container {
-        order: 4;
-      }
-
-      &[aria-label="Current time"] {
-        order: 5;
-      }
-
-      &[aria-label="Duration"] {
-        order: 6;
-      }
-
-      &.plyr__volume {
-        order: 7;
-      }
-
-      &.plyr__menu {
-        order: 8;
-      }
-
-      &[data-plyr="download"] {
-        order: 9;
-      }
-
-      &[data-plyr="immersive"] {
+      &[data-plyr="prev"] {
         order: 10;
       }
 
+      &[data-plyr="play"] {
+        order: 20;
+      }
+
+      &[data-plyr="next"] {
+        order: 30;
+      }
+
+      &[data-plyr="series"] {
+        order: 40;
+      }
+
+      &.plyr__progress__container {
+        order: 50;
+      }
+
+      &[aria-label="Current time"] {
+        order: 60;
+      }
+
+      &[aria-label="Duration"] {
+        order: 70;
+      }
+
+      &.plyr__volume {
+        order: 80;
+      }
+
+      &.plyr__menu {
+        order: 90;
+      }
+
+      &[data-plyr="download"] {
+        order: 100;
+      }
+
+      &[data-plyr="immersive"] {
+        order: 110;
+      }
+
       &[data-plyr="fullscreen"] {
-        order: 11;
+        order: 120;
       }
     }
   }

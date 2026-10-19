@@ -2,18 +2,20 @@ import { defineStore } from "pinia";
 import Hls from "hls.js";
 import Plyr from "plyr";
 import { readVideoProgress, saveVideoProgress } from "./progress";
-import { getVideoM3U8 } from "../series/main";
+import { getVideoM3U8, hasPreviewSeries } from "../series/main";
 
 export const usePlayerStore = defineStore("player", () => {
   const hls = ref<Hls | null>(null);
   const player = ref<Plyr | null>(null);
   const currentSource = ref("");
   const isReady = ref(false);
+  const hasPrevSeries = ref(hasPreviewSeries());
 
   const playSource = (source: string) => {
     hls.value?.loadSource(source);
     currentSource.value = source;
     player.value?.play();
+    hasPrevSeries.value = hasPreviewSeries();
   };
 
   const getVideoProgress = () =>
@@ -51,6 +53,7 @@ export const usePlayerStore = defineStore("player", () => {
         exitFullscreen: "退出全屏(f)",
         settings: "设置",
         download: "下载",
+        prev: '上一集([)',
         next: "下一集(])",
         speed: "速度",
         normal: "1.0x",
@@ -93,5 +96,13 @@ export const usePlayerStore = defineStore("player", () => {
     return { hls: hlsInstance, player: playerInstance, source };
   };
 
-  return { player, currentSource, hls, isReady, init, playSource };
+  return {
+    player,
+    currentSource,
+    hls,
+    isReady,
+    hasPrevSeries,
+    init,
+    playSource,
+  };
 });
