@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import immersiveIcon from "~/assets/immersive.png";
 import BaseActionButton from "./BaseActionButton.vue";
+import { useBindGlobalKey } from "@/hooks/useBindGlobalKey";
 
 const immActive = ref(false);
 
@@ -42,12 +43,11 @@ const toggle = () => {
 };
 
 // esc 退出沉浸模式
-const escHandler = (e: KeyboardEvent) => {
-  if (e.key === "Escape" && immActive.value) toggle();
+const escHandler = () => {
+  if (immActive.value) toggle();
 };
 
-onMounted(() => window.addEventListener("keydown", escHandler));
-onBeforeUnmount(() => window.removeEventListener("keydown", escHandler));
+useBindGlobalKey("Escape", escHandler);
 </script>
 
 <style scoped lang="scss">

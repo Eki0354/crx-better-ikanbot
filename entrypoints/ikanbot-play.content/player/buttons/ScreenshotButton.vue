@@ -8,6 +8,7 @@
 </template>
 
 <script setup lang="ts">
+import { useBindGlobalKey } from "@/hooks/useBindGlobalKey";
 import { getVideoTitle } from "../../series/main";
 import BaseActionButton from "./BaseActionButton.vue";
 
@@ -51,17 +52,5 @@ const onClick = () => {
   takeScreenshot();
 };
 
-const handleKeydown = (e: KeyboardEvent) => {
-  if (e.code !== 'F10') return;
-
-  onClick();
-};
-
-onMounted(() => {
-  window.addEventListener("keydown", handleKeydown);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("keydown", handleKeydown);
-});
+useBindGlobalKey("F10", onClick);
 </script>

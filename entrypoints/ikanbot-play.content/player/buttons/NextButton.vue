@@ -10,4 +10,7 @@
 import nextIcon from "~/assets/next.png";
 import { playNext } from "../../series/main";
 import BaseActionButton from "./BaseActionButton.vue";
+import { useBindGlobalKey } from "@/hooks/useBindGlobalKey";
+
+useBindGlobalKey('BracketRight', playNext);
 </script>
