@@ -1,6 +1,5 @@
 export function useBindGlobalKey(code: string, callback: () => void) {
   const handleKeydown = (e: KeyboardEvent) => {
-    console.log(e.code, code);
     if (e.code !== code) return;
 
     callback();

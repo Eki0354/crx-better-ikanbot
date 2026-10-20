@@ -1,12 +1,16 @@
 <template>
   <BaseActionButton
     data-plyr="series"
-    label="剧集"
-    @click.prevent.stop="showSeriesSidebar"
+    :icon="seriesIcon"
+    @click.prevent.stop="toggleSeriesSidebar"
   />
 </template>
 
 <script setup lang="ts">
-import { showSeriesSidebar } from "../../utils";
+import seriesIcon from "~/assets/series.png";
+import { toggleSeriesSidebar } from "../../utils";
 import BaseActionButton from "./BaseActionButton.vue";
+import { useBindGlobalKey } from "@/hooks/useBindGlobalKey";
+
+useBindGlobalKey("KeyS", toggleSeriesSidebar);
 </script>

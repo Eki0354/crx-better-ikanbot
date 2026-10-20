@@ -3,6 +3,8 @@
 </template>
 
 <script setup lang="ts">
+import { hideSeriesSidebar } from '../utils';
+
 const SIDEBAR_WIDTH_KEY = "betterIkanbot_sidebarWidth";
 const SIDEBAR_MIN_WIDTH = 220;
 const SIDEBAR_MAX_WIDTH_RATIO = 0.5;
@@ -73,7 +75,7 @@ const onOutsideClick = (e: MouseEvent) => {
   e.preventDefault();
   e.stopPropagation();
 
-  node.style.display = "none";
+  hideSeriesSidebar();
 };
 
 onMounted(() => {

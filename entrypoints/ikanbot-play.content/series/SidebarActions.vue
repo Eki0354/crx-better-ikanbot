@@ -11,29 +11,7 @@
 </template>
 
 <script setup lang="ts">
-const sidebar = document.querySelector(
-  ".row:has(#playList)",
-) as HTMLDivElement | null;
-
-function showSeriesSidebar() {
-  if (!sidebar) return;
-
-  sidebar.style.display = "flex";
-
-  if (!("scrolled" in sidebar.dataset)) {
-    // 将当前剧集选项滚动到当前视区
-    document
-      .querySelector('#lineContent [name="lineData"].active')
-      ?.scrollIntoView();
-    sidebar.dataset["scrolled"] = "1";
-  }
-}
-
-function hideSeriesSidebar() {
-  if (!sidebar) return;
-
-  sidebar.style.display = "none";
-}
+import { hideSeriesSidebar, showSeriesSidebar } from "../utils";
 </script>
 
 <style lang="scss" scoped>

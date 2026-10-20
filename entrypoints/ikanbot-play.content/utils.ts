@@ -1,5 +1,7 @@
 import { sendMessage } from "webext-bridge/content-script";
 
+const KEY_SERIES_SIDEBAR_VISIBLE = "__sereis_sidebar_visible__";
+
 /**
  * 等待指定的 DOM 元素出现在页面中
  * @param selector - CSS 选择器，例如 '#app'、'.comment-box'
@@ -57,13 +59,26 @@ export function showSeriesSidebar() {
       ?.scrollIntoView();
     sidebar.dataset["scrolled"] = "1";
   }
+
+  localStorage.setItem(KEY_SERIES_SIDEBAR_VISIBLE, "1");
 }
 
 export function hideSeriesSidebar() {
   const sidebar: HTMLDivElement | null = document.querySelector(
     ".row:has(#playList)",
   );
-  if (sidebar) sidebar.style.display = "none";
+  if (!sidebar) return;
+
+  sidebar.style.display = "none";
+  localStorage.setItem(KEY_SERIES_SIDEBAR_VISIBLE, "0");
+}
+
+export function toggleSeriesSidebar() {
+  if (localStorage.getItem(KEY_SERIES_SIDEBAR_VISIBLE) === "1") {
+    hideSeriesSidebar();
+  } else {
+    showSeriesSidebar();
+  }
 }
 
 /** 通过 background 代理获取图片 base64（避免跨域/tainted canvas） */

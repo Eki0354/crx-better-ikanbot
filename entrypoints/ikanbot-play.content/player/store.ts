@@ -53,12 +53,13 @@ export const usePlayerStore = defineStore("player", () => {
         exitFullscreen: "退出全屏(f)",
         settings: "设置",
         download: "下载",
-        prev: '上一集([)',
+        prev: "上一集([)",
         next: "下一集(])",
         speed: "速度",
         normal: "1.0x",
         enterImmersive: "网页全屏",
         exitImmersive: "退出网页全屏",
+        series: "剧集(s)",
       },
     });
 
