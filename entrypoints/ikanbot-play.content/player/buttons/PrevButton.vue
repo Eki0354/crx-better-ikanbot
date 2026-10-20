@@ -3,7 +3,13 @@
     data-plyr="prev"
     :icon="nextIcon"
     @click.prevent.stop="playPrev"
-  />
+  >
+    <img
+      class="aspect-square -scale-x-100"
+      :src="nextIcon"
+      style="width: 18px"
+    />
+  </BaseActionButton>
 </template>
 
 <script setup lang="ts">

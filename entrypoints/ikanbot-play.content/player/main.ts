@@ -4,6 +4,7 @@ import App from "./App.vue";
 import "./progress";
 import Toast from "@lanxuexing/vue2toast";
 import "@lanxuexing/vue2toast/style.css";
+import '~/assets/tailwind.css';
 
 export function initPlayer(ctx: ContentScriptContext) {
   const ui = createIntegratedUi(ctx, {
