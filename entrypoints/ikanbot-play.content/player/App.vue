@@ -4,7 +4,7 @@
   </Teleport>
 
   <Teleport v-if="isReady" to=".plyr__controls">
-    <PrevButton v-if="hasPrevSeries" />
+    <PrevButton v-if="hasPrevSeries" v-first />
     <NextButton />
     <SeriesButton />
     <ImmersiveButton />
@@ -27,10 +27,17 @@ import DownloadButton from "./buttons/DownloadButton.vue";
 import ScreenshotButton from "./buttons/ScreenshotButton.vue";
 import AutoplayButton from "./buttons/AutoplayButton.vue";
 import PrevButton from "./buttons/PrevButton.vue";
+import { vFirst } from "~/directives/vFirst";
+import { useKeepLast } from "@/hooks/useKeepLast";
 
 const playerStore = usePlayerStore();
 
 const { isReady, hasPrevSeries } = storeToRefs(playerStore);
+
+useKeepLast({
+  parent: ".plyr__controls",
+  child: ".plyr__controls__item[data-plyr='fullscreen']",
+});
 
 const videoRef = ref<HTMLVideoElement | null>(null);
 
@@ -108,6 +115,18 @@ body.no-scroll {
 
       &[data-plyr="fullscreen"] {
         order: 120;
+
+        .plyr__tooltip {
+          // left: auto;
+          // right: 0;
+        }
+      }
+
+      &:last-child {
+        .plyr__tooltip {
+          // left: -50%;
+          // right: unset;
+        }
       }
     }
   }
