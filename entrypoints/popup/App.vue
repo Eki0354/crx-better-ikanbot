@@ -5,8 +5,9 @@ import { useDropboxStore } from "./stores/dropbox";
 import { storeToRefs } from "pinia";
 import OAuthBox from "@/components/OAuthBox.vue";
 import ProgressSync from "@/components/ProgressSync.vue";
-import logoSvg from "../../assets/logo.svg";
-import searchPng from "../../assets/search.png";
+import logoSvg from "~/assets/logo.svg";
+import searchPng from "~/assets/search.png";
+import YuI from "~/assets/YuI.png";
 
 const dbStore = useDropboxStore();
 const { token } = storeToRefs(dbStore);
@@ -31,7 +32,7 @@ function doSearch() {
 </script>
 
 <template>
-  <div class="main-container">
+  <div class="main-container relative">
     <header class="header">
       <button class="header-btn" @click="goHome" title="ikanbot 首页">
         <img :src="logoSvg" alt="Logo" class="header-icon" />
@@ -53,6 +54,14 @@ function doSearch() {
         <img :src="searchPng" alt="搜索" class="header-icon" />
       </button>
     </header>
+
+    <a
+      class="absolute -top-4 -right-3 w-4 aspect-square cursor-pointer"
+      href="https://yiyun.meeteki.com/better-ikanbot"
+      target="_blank"
+    >
+      <img :src="YuI" class="block w-full h-full" alt="主页" title="主页" />
+    </a>
 
     <OAuthBox v-if="!token" />
     <ProgressSync v-else />
