@@ -2,7 +2,7 @@
   <BaseActionButton
     data-plyr="screenshot"
     role="menuitem"
-    label="截图"
+    label="截图(F10)"
     @click.prevent.stop="onClick"
   />
 </template>
@@ -50,4 +50,18 @@ const onClick = () => {
   )?.click();
   takeScreenshot();
 };
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.code !== 'F10') return;
+
+  onClick();
+};
+
+onMounted(() => {
+  window.addEventListener("keydown", handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeydown);
+});
 </script>
