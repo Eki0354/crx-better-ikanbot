@@ -1,5 +1,10 @@
 <template>
-  <button class="plyr__control plyr__controls__item" :data-plyr="dataPlyr" type="button">
+  <button
+    class="plyr__control plyr__controls__item"
+    :data-plyr="dataPlyr"
+    type="button"
+    :aria-label="tooltip || dataPlyr"
+  >
     <slot>
       <img v-if="icon" class="aspect-square" :src="icon" style="width: 18px" />
       <span v-else-if="label">{{ label }}</span>
@@ -26,6 +31,7 @@ const playerStore = usePlayerStore();
 const { player } = storeToRefs(playerStore);
 
 const tooltip = computed(
-  () => (player.value as any)?.config?.i18n?.[props.tooltipKey || props.dataPlyr],
+  () =>
+    (player.value as any)?.config?.i18n?.[props.tooltipKey || props.dataPlyr],
 );
 </script>
