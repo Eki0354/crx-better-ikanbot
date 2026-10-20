@@ -2,6 +2,8 @@ import { ContentScriptContext } from "#imports";
 import { createPinia } from "pinia";
 import App from "./App.vue";
 import "./progress";
+import Toast from "@lanxuexing/vue2toast";
+import "@lanxuexing/vue2toast/style.css";
 
 export function initPlayer(ctx: ContentScriptContext) {
   const ui = createIntegratedUi(ctx, {
@@ -15,6 +17,8 @@ export function initPlayer(ctx: ContentScriptContext) {
 
       const pinia = createPinia();
       app.use(pinia);
+      
+      app.use(Toast);
 
       app.mount(container);
     },

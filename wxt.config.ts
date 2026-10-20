@@ -3,6 +3,7 @@ import { defineConfig } from "wxt";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
+import path from "path";
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -35,7 +36,25 @@ export default defineConfig({
         resolvers: [ElementPlusResolver()],
       }),
     ],
+    resolve: {
+      alias: {
+        "@lanxuexing/vue2toast/style.css": path.resolve(
+          __dirname,
+          "node_modules/@lanxuexing/vue2toast/dist/vue2toast.css",
+        ),
+      },
+    },
     build: {
+      rolldownOptions: {
+        resolve: {
+          alias: {
+            "@lanxuexing/vue2toast/style.css": path.resolve(
+              __dirname,
+              "node_modules/@lanxuexing/vue2toast/dist/vue2toast.css",
+            ),
+          },
+        },
+      },
       rollupOptions: {
         // 过滤第三方库（如 @vueuse/core）中位置不当的 #__PURE__ 注释警告：
         // 这类注释仅影响 tree-shaking 优化精度，无害，且 node_modules 源码无法直接修改

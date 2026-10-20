@@ -16,6 +16,7 @@
     "bump": "node ./scripts/bump.js"
   },
   "dependencies": {
+    "@lanxuexing/vue2toast": "^1.0.2",
     "@tailwindcss/vite": "^4.3.2",
     "axios": "^1.18.1",
     "cheerio": "^1.2.0",
