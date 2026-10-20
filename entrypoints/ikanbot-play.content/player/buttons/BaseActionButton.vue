@@ -1,16 +1,18 @@
 <template>
   <button
-    class="plyr__control plyr__controls__item"
+    class="plyr__control"
+    :class="role || 'plyr__controls__item'"
     :data-plyr="dataPlyr"
     type="button"
     :aria-label="tooltip || dataPlyr"
+    :role="role"
   >
     <slot>
       <img v-if="icon" class="aspect-square" :src="icon" style="width: 18px" />
       <span v-else-if="label">{{ label }}</span>
     </slot>
 
-    <span v-if="tooltip" class="plyr__tooltip">{{ tooltip }}</span>
+    <span v-if="!role && tooltip" class="plyr__tooltip">{{ tooltip }}</span>
   </button>
 </template>
 
@@ -23,6 +25,7 @@ type BaseButtonProps = {
   label?: string;
   icon?: string;
   tooltipKey?: string;
+  role?: "menuitemcheckbox" | "menuitem";
 };
 
 const props = defineProps<BaseButtonProps>();

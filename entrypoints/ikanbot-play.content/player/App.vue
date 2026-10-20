@@ -8,11 +8,11 @@
     <NextButton />
     <SeriesButton />
     <ImmersiveButton />
-    <DownloadButton />
   </Teleport>
 
   <Teleport v-if="isReady" to=".plyr__menu__container [role='menu']">
     <ScreenshotButton />
+    <DownloadButton />
     <AutoplayButton />
   </Teleport>
 </template>
@@ -103,6 +103,23 @@ body.no-scroll {
 
       &.plyr__menu {
         order: 90;
+
+        .plyr__menu__container {
+          background: hsla(0, 0%, 8%, 0.9);
+
+          &:after {
+            display: none;
+          }
+
+          .plyr__control {
+            color: #fff;
+
+            &:hover {
+              background: transparent;
+              color: #00AEEC;
+            }
+          }
+        }
       }
 
       &[data-plyr="download"] {

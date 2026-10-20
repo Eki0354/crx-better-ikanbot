@@ -1,10 +1,8 @@
 <template>
-  <button
-    class="plyr__control plyr__control--autoplay autoplay-item"
-    type="button"
+  <BaseActionButton
+    data-plyr="autoPlayNext"
     role="menuitemcheckbox"
     :aria-checked="autoplayEnabled"
-    tabindex="-1"
     @click.prevent.stop="onClick"
   >
     <div class="autoplay-item__inner">
@@ -13,13 +11,14 @@
         <span class="autoplay-switch__thumb"></span>
       </span>
     </div>
-  </button>
+  </BaseActionButton>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { usePlayerStore } from "../store";
 import { playNext } from "../../series/main";
+import BaseActionButton from "./BaseActionButton.vue";
 
 const KEY = "autoplay_enabled";
 
@@ -78,7 +77,7 @@ onMounted(toggleAutoplay);
   transition: background 0.2s ease;
 
   &.on {
-    background: #00a133; /* 开启：B 站蓝 */
+    background: #00AEEC; /* 开启：B 站蓝 */
   }
 }
 

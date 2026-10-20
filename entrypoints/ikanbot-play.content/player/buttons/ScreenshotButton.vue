@@ -1,17 +1,15 @@
 <template>
-  <button
-    class="plyr__control plyr__control--screenshot"
-    type="button"
+  <BaseActionButton
+    data-plyr="screenshot"
     role="menuitem"
-    tabindex="0"
+    label="截图"
     @click.prevent.stop="onClick"
-  >
-    <span class="plyr__menu__label">截图</span>
-  </button>
+  />
 </template>
 
 <script setup lang="ts">
 import { getVideoTitle } from "../../series/main";
+import BaseActionButton from "./BaseActionButton.vue";
 
 /** 当前视频画面截图并下载为 PNG */
 const takeScreenshot = () => {
