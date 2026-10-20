@@ -115,18 +115,6 @@ body.no-scroll {
 
       &[data-plyr="fullscreen"] {
         order: 120;
-
-        .plyr__tooltip {
-          // left: auto;
-          // right: 0;
-        }
-      }
-
-      &:last-child {
-        .plyr__tooltip {
-          // left: -50%;
-          // right: unset;
-        }
       }
     }
   }
